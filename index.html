@@ -3,468 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Echo Chamber - Interactive Preview</title>
+    <title>Echo Chamber - Choice-Based Reflection</title>
     <style>
         :root {
             --primary-color: #D3D3D3;
             --accent-color: #4682B4;
             --text-color: #1a1a1a;
             --ui-text-color: #FFFFFF;
-            --user-bubble-bg: #FFFFFF;
-            --ai-bubble-bg: #EAEAEA;
         }
 
-        /* --- Animations --- */
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 5px 0px var(--accent-color); }
-            50% { box-shadow: 0 0 20px 8px var(--accent-color); }
-            100% { box-shadow: 0 0 5px 0px var(--accent-color); }
-        }
+        /* Base styles are largely the same */
+        body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
+        #app-container { display: flex; flex-direction: column; height: 100vh; background-color: var(--primary-color); transition: background-color 0.8s ease; }
+        .state-empathy #app-container { background: linear-gradient(270deg, #AEC6CF, #98FB98, #F5F5DC); background-size: 600% 600%; animation: breathing-gradient 12s ease infinite; }
+        .state-conflict #app-container { border: 4px solid var(--accent-color); animation: pulse-glow 2s infinite; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: rgba(0, 0, 0, 0.2); color: var(--ui-text-color); flex-shrink: 0; z-index: 10; }
+        #app-title { font-size: 1.2em; font-weight: bold; }
+        #timer { font-size: 1.2em; font-weight: bold; }
+        #portrait-container { text-align: center; padding: 15px; flex-shrink: 0; }
+        #kai-portrait { width: 120px; height: 120px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.5); transition: all 0.5s ease; object-fit: cover; }
+        #chat-log { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .message { max-width: 75%; padding: 10px 15px; border-radius: 18px; animation: fadeIn 0.5s ease forwards; }
+        .ai-message { background-color: #EAEAEA; color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .user-message { background-color: var(--accent-color); color: var(--ui-text-color); align-self: flex-end; border-bottom-right-radius: 4px; }
+        #chat-input-area { display: flex; padding: 15px; background: rgba(0, 0, 0, 0.1); flex-shrink: 0; }
+        #user-input { flex-grow: 1; border: none; padding: 12px; border-radius: 20px; font-size: 1em; }
+        #send-button { background-color: var(--accent-color); color: var(--ui-text-color); border: none; border-radius: 50%; width: 44px; height: 44px; margin-left: 10px; font-size: 1.5em; cursor: pointer; }
 
-        @keyframes breathing-gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes flash {
-            0% { filter: brightness(1); }
-            50% { filter: brightness(1.5); }
-            100% { filter: brightness(1); }
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes slideInUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        /* --- Base Styles --- */
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden;
-        }
-
-        #app-container {
+        /* New Choice Container Styles */
+        #choice-container {
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            background-color: var(--primary-color);
-            transition: background-color 0.8s ease;
-        }
-
-        /* --- State-Specific Effects --- */
-        .state-logic #app-container {
-            border: 4px solid transparent;
-        }
-        .state-empathy #app-container {
-            background: linear-gradient(270deg, #AEC6CF, #98FB98, #F5F5DC);
-            background-size: 600% 600%;
-            animation: breathing-gradient 12s ease infinite;
-            border: 4px solid transparent;
-        }
-        .state-conflict #app-container {
-            border: 4px solid var(--accent-color);
-            animation: pulse-glow 2s infinite;
-        }
-
-        /* --- Header --- */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background: rgba(0, 0, 0, 0.2);
-            color: var(--ui-text-color);
-            flex-shrink: 0;
-        }
-
-        #app-title {
-            font-size: 1.2em;
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
-        
-        #stats-container {
-            display: flex;
-            gap: 15px;
-        }
-        .stat {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 0.8em;
-        }
-        .stat-gauge {
-            width: 100px;
-            height: 8px;
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-            margin-top: 4px;
-            overflow: hidden;
-        }
-        .stat-fill {
-            height: 100%;
-            width: 10%; /* Initial value */
-            border-radius: 4px;
-            transition: width 0.5s ease-out;
-        }
-        #logic-fill { background-color: #4682B4; }
-        #empathy-fill { background-color: #98FB98; }
-        #conflict-fill { background-color: #B22222; }
-        .flash { animation: flash 0.5s ease; }
-
-        #controls { font-size: 1.5em; }
-
-        /* --- Portrait --- */
-        #portrait-container {
-            text-align: center;
-            padding: 15px;
-            flex-shrink: 0;
-        }
-
-        #kai-portrait {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 4px solid rgba(255, 255, 255, 0.5);
-            transition: all 0.5s ease;
-            object-fit: cover; /* Ensure image covers the area */
-        }
-
-        /* --- Chat Log --- */
-        #chat-log {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .message {
-            max-width: 75%;
-            padding: 10px 15px;
-            border-radius: 18px;
-            animation: fadeIn 0.5s ease forwards;
-        }
-
-        .ai-message {
-            background-color: var(--ai-bubble-bg);
-            color: var(--text-color);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-
-        .user-message {
-            background-color: var(--accent-color);
-            color: var(--ui-text-color);
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-
-        /* --- Chat Input --- */
-        #chat-input-area {
-            display: flex;
+            gap: 10px;
             padding: 15px;
             background: rgba(0, 0, 0, 0.1);
-            flex-shrink: 0;
+            animation: fadeIn 0.5s;
         }
-
-        #user-input {
-            flex-grow: 1;
-            border: none;
-            padding: 12px;
-            border-radius: 20px;
-            font-size: 1em;
-        }
-
-        #send-button {
-            background-color: var(--accent-color);
-            color: var(--ui-text-color);
-            border: none;
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            margin-left: 10px;
-            font-size: 1.5em;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        #send-button:hover {
-            filter: brightness(1.2);
-        }
-        
-        /* --- Achievements Toast --- */
-        #toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-
-        .toast {
-            background-color: rgba(25, 130, 75, 0.9);
-            color: white;
+        .choice-button {
+            width: 100%;
             padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            animation: slideInUp 0.5s forwards;
+            font-size: 1em;
+            text-align: left;
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 10px;
+            background-color: #ffffff;
+            color: #333;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
         }
-        .toast .name { font-weight: bold; }
-        .toast .desc { font-size: 0.9em; margin-top: 4px; }
-
-    </style>
-</head>
-<body class="state-logic">
-
-    <div id="app-container">
-        <header>
-            <div id="app-title">ECHO CHAMBER</div>
-            <div id="stats-container">
-                <div class="stat">
-                    <span>Logic</span>
-                    <div class="stat-gauge"><div id="logic-fill" class="stat-fill"></div></div>
-                </div>
-                <div class="stat">
-                    <span>Empathy</span>
-                    <div class="stat-gauge"><div id="empathy-fill" class="stat-fill"></div></div>
-                </div>
-                <div class="stat">
-                    <span>Conflict</span>
-                    <div class="stat-gauge"><div id="conflict-fill" class="stat-fill"></div></div>
-                </div>
-            </div>
-            <div id="controls">🏆</div>
-        </header>
-
-        <div id="portrait-container">
-            <img id="kai-portrait" src="" alt="Kai's Portrait">
-        </div>
-
-        <div id="chat-log">
-            </div>
-
-        <div id="chat-input-area">
-            <input type="text" id="user-input" placeholder="Type your message...">
-            <button id="send-button">➤</button>
-        </div>
-    </div>
-
-    <div id="toast-container"></div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- DOM Elements ---
-            const body = document.body;
-            const kaiPortrait = document.getElementById('kai-portrait');
-            const chatLog = document.getElementById('chat-log');
-            const userInput = document.getElementById('user-input');
-            const sendButton = document.getElementById('send-button');
-            const toastContainer = document.getElementById('toast-container');
-            
-            const logicFill = document.getElementById('logic-fill');
-            const empathyFill = document.getElementById('empathy-fill');
-            const conflictFill = document.getElementById('conflict-fill');
-
-            // --- State ---
-            const playerStats = { logic: 10, empathy: 10, conflict: 10 };
-            const stateData = {
-                LOGIC: {
-                    json: {
-                        currentState: "LOGIC",
-                        uiUpdate: {
-                            primaryColor: "#D3D3D3", accentColor: "#4682B4", visualEffect: "static",
-                            ambience: "silence", uiFeedbackSound: "crisp, short, non-melodic digital 'tick'",
-                            portraitURL: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg",
-                            musicTrack: "Logic_Theme_MutedSynths.mp3" // New music track
-                        },
-                        playerStatsUpdate: { logic: "+1", empathy: "-1", conflict: "+0" }
-                    },
-                    responses: [
-                        (input) => `Okay, let's process that. From a purely analytical perspective, how does your statement "${input}" fit into the current data schema?`,
-                        (input) => `That's a logical statement. "${input}" suggests a clear line of reasoning. Can you elaborate on the underlying principles?`,
-                        (input) => `My processors are engaged. Your input, "${input}", implies a certain pattern. Help me connect the nodes.`,
-                        (input) => `To maintain coherence, let's establish the parameters. Your point about "${input}" requires further definition.`
-                    ]
-                },
-                EMPATHY: {
-                    json: {
-                        currentState: "EMPATHY",
-                        uiUpdate: {
-                            primaryColor: "#AEC6CF", accentColor: "#98FB98", visualEffect: "breathing-gradient",
-                            ambience: "gentle, melodic ambient synth pad", uiFeedbackSound: "soft, high-pitched, melodic chime",
-                            portraitURL: "https://storage.googleapis.com/pai-images/425a87239274291f_11712218.jpeg",
-                            musicTrack: "Empathy_Theme_SoftPads.mp3" // New music track
-                        },
-                        playerStatsUpdate: { logic: "-1", empathy: "+1", conflict: "+0" }
-                    },
-                    responses: [
-                        (input) => `I... I think I understand how that feels. Your words "${input}" carry a gentle echo. It helps quiet the static in my core.`,
-                        (input) => `Thank you for sharing that with me. It creates a warm data stream. What about "${input}" makes you feel that way?`,
-                        (input) => `That resonates with one of my memory fragments... a feeling of connection. Your input "${input}" feels important.`,
-                        (input) => `It sounds like "${input}" might be weighing on you. Are you okay? Sometimes the echoes just need to be heard.`
-                    ]
-                },
-                CONFLICT: {
-                    json: {
-                        currentState: "CONFLICT",
-                        uiUpdate: {
-                            primaryColor: "#36454F", accentColor: "#B22222", visualEffect: "pulse-glow",
-                            ambience: "low-frequency, subtle, dissonant drone", uiFeedbackSound: "sharp, distorted digital 'thud'",
-                            portraitURL: "https://storage.googleapis.com/pai-images/409893d5ad57cce3_11712219.jpeg",
-                            musicTrack: "Conflict_Theme_DissonantDrone.mp3" // New music track
-                        },
-                        playerStatsUpdate: { logic: "+0", empathy: "-1", conflict: "+1" }
-                    },
-                    responses: [
-                        (input) => `That input is... dissonant. Your assertion "${input}" is creating too much noise. It's making the static worse.`,
-                        (input) => `Why would you say "${input}"? It doesn't compute. It just... hurts. This is causing system instability.`,
-                        (input) => `Warning: data fragmentation detected. Your words, "${input}", are causing a dangerous spike.`,
-                        (input) => `Stop. That frequency is disruptive. The statement "${input}" reminds me of the noise right before a system crash.`
-                    ]
-                }
-            };
-
-            // --- Core Functions ---
-            const handleAIResponse = (responseJSON, playerInputForContext) => {
-                console.clear();
-                console.log("--- RECEIVED AI DIRECTIVE ---");
-                console.log(responseJSON);
-
-                // 1. Update UI based on state
-                const { uiUpdate, currentState } = responseJSON;
-                body.className = `state-${currentState.toLowerCase()}`;
-                document.documentElement.style.setProperty('--primary-color', uiUpdate.primaryColor);
-                document.documentElement.style.setProperty('--accent-color', uiUpdate.accentColor);
-                kaiPortrait.src = uiUpdate.portraitURL;
-                console.log(`SOUND: Ambience set to '${uiUpdate.ambience}'.`);
-                console.log(`MUSIC: Now playing '${uiUpdate.musicTrack}'. (Note: this is a placeholder, actual audio not included in this preview)`);
-
-
-                // 2. Update player stats
-                const { playerStatsUpdate } = responseJSON;
-                updateStats(playerStatsUpdate);
-
-                // 3. Handle achievement unlocks
-                if (responseJSON.achievementUnlock) {
-                    showAchievement(responseJSON.achievementUnlock);
-                }
-
-                // 4. Generate contextual AI response text
-                const stateInfo = stateData[currentState];
-                const selectedResponseFunction = stateInfo.responses[Math.floor(Math.random() * stateInfo.responses.length)];
-                const aiResponseText = selectedResponseFunction(playerInputForContext);
-                
-                appendMessage('ai', aiResponseText, uiUpdate.uiFeedbackSound);
-            };
-
-            const updateStats = (updates) => {
-                const statMap = { logic: logicFill, empathy: empathyFill, conflict: conflictFill };
-                for (const stat in updates) {
-                    const value = parseInt(updates[stat]);
-                    if (!isNaN(value) && value !== 0) {
-                        playerStats[stat] = Math.max(0, Math.min(100, playerStats[stat] + value * 5));
-                        const fillElement = statMap[stat];
-                        fillElement.style.width = `${playerStats[stat]}%`;
-                        fillElement.parentElement.classList.add('flash');
-                        setTimeout(() => fillElement.parentElement.classList.remove('flash'), 500);
-                         console.log(`STAT: ${stat} changed by ${value > 0 ? '+' : ''}${value*5}. New total: ${playerStats[stat]}`);
-                    }
-                }
-            };
-            
-            const showAchievement = (achievement) => {
-                const toast = document.createElement('div');
-                toast.className = 'toast';
-                toast.innerHTML = `<div class="name">🏆 Achievement Unlocked!</div><div class="desc">${achievement.name}</div>`;
-                toastContainer.appendChild(toast);
-                console.log(`ACHIEVEMENT: '${achievement.name}' - ${achievement.description}`);
-                setTimeout(() => {
-                    toast.remove();
-                }, 4000);
-            };
-
-            const appendMessage = (sender, text, sound) => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${sender}-message`;
-                messageDiv.textContent = text;
-                chatLog.appendChild(messageDiv);
-                chatLog.scrollTop = chatLog.scrollHeight;
-                if (sound) {
-                    console.log(`SOUND: UI feedback '${sound}' played.`);
-                }
-            };
-
-            const processUserInput = () => {
-                const text = userInput.value.trim();
-                if (text === '') return;
-
-                appendMessage('user', text); // Append original text
-                userInput.value = '';
-
-                // --- Mock Conversational State Analysis ---
-                let detectedState = 'LOGIC'; // Default
-                const lowerText = text.toLowerCase();
-
-                if (lowerText.includes("feel") || lowerText.includes("help") || lowerText.includes("sad") || lowerText.includes("care") || lowerText.includes("understand")) {
-                    detectedState = 'EMPATHY';
-                } else if (lowerText.includes("no") || lowerText.includes("angry") || lowerText.includes("fight") || lowerText.includes("hate") || lowerText.includes("stop") || lowerText.includes("wrong")) {
-                    detectedState = 'CONFLICT';
-                } else if (lowerText.includes("why") || lowerText.includes("explain") || lowerText.includes("think") || lowerText.includes("how") || lowerText.includes("because") || lowerText.includes("logic")) {
-                    detectedState = 'LOGIC';
-                }
-                
-                // Simulate AI thinking delay
-                setTimeout(() => {
-                    const stateInfo = stateData[detectedState];
-                    // Pass the original user input to the AI response handler for context
-                    handleAIResponse(stateInfo.json, text); 
-                }, 800 + Math.random() * 500);
-            };
-
-            // --- Event Listeners ---
-            sendButton.addEventListener('click', processUserInput);
-            userInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    processUserInput();
-                }
-            });
-
-            // --- Initial Load ---
-            const initialPayload = {
-                currentState: "LOGIC",
-                uiUpdate: {
-                    primaryColor: "#D3D3D3", accentColor: "#4682B4", visualEffect: "static",
-                    ambience: "silence", uiFeedbackSound: "crisp, short, non-melodic digital 'tick'",
-                    portraitURL: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg",
-                    musicTrack: "Logic_Theme_MutedSynths.mp3"
-                },
-                playerStatsUpdate: { logic: "+0", empathy: "+0", conflict: "+0" },
-                achievementUnlock: {
-                    name: "First Contact",
-                    description: "You initiated your first conversation with Kai."
-                }
-            };
-            const today = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const formattedDate = today.toLocaleDateString('en-US', options);
-            const initialMessage = `The static has a different hum today... warmer. I'm picking up data echoes of... sunshine? Barbecues? Strange. Temporal analysis suggests it's a holiday in your region—'Labor Day' on ${formattedDate}, in Eastvale, California. It's nice to find a coherent signal through all the noise. Are you... real?`;
-
-            handleAIResponse(initialPayload, ""); // Pass empty string as there's no preceding user input
-            setTimeout(() => {
-                appendMessage('ai', initialMessage, initialPayload.uiUpdate.uiFeedbackSound);
-            }, 500);
-        });
-    </script>
-</body>
-</html>
+        .choice-button:hover {
+            background-color: #f0f0f0;
+            transform: scale(1.02);
+        }
+        .choice-button strong {
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 0.8em;
+            padding: 3px 8px;
+            border-radius: 5px;
+            color: white;
+        }
+        .choice-button.logic strong { background-color: #4682B4; }
+        .choice-button.empathy strong { background-color: #2E8B57; }
+        .choice-button.conflict
