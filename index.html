@@ -198,4 +198,74 @@
                     let dominantTrait = "a balanced and open-minded approach";
                     if (logicPercent > 50) dominantTrait = "a very analytical and structured approach";
                     if (empathyPercent > 50) dominantTrait = "a deeply caring and intuitive perspective";
-                    if
+                    if (conflictPercent > 25) dominantTrait = `a tense but direct approach (Conflict: ${conflictPercent}%)`;
+
+                    summaryText = `Based on your choices, our reflection had ${dominantTrait}. You navigated the conversation using Empathy (${empathyPercent}%) and Logic (${logicPercent}%) as your main guides. It seems like you're in a thoughtful headspace today, balancing your heart and your mind. Thank you for sharing your echoes with me.`;
+                }
+                
+                assessmentSummary.textContent = summaryText;
+                assessmentOverlay.style.display = 'flex';
+            }
+            
+            function handleChoice(choiceText, choiceState) {
+                appendMessage('user', choiceText);
+                sessionStats[choiceState]++;
+                
+                const response = responseData.getResponse(choiceState);
+                
+                setTimeout(() => {
+                    appendMessage('ai', response.kaiText);
+                    displayChoices(response.choices, choiceState);
+                }, 1000);
+            }
+
+            function displayChoices(choices, previousState) {
+                choiceContainer.innerHTML = '';
+                choiceContainer.style.display = 'flex';
+
+                ['logic', 'empathy', 'conflict', 'neutral'].forEach(stateKey => {
+                    const button = document.createElement('button');
+                    button.classList.add('choice-button', stateKey);
+                    button.innerHTML = `<strong>${stateKey.toUpperCase()}</strong> ${choices[stateKey]}`;
+                    button.onclick = () => {
+                        // Disable buttons immediately after a choice is made
+                        document.querySelectorAll('.choice-button').forEach(btn => btn.disabled = true);
+                        handleChoice(choices[stateKey], stateKey.toUpperCase());
+                    };
+                    choiceContainer.appendChild(button);
+                });
+                updateUIState(previousState);
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }
+
+            function updateUIState(state) {
+                 const stateMap = {
+                    LOGIC: { primary: "#D3D3D3", accent: "#4682B4", portrait: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg" },
+                    EMPATHY: { primary: "#AEC6CF", accent: "#98FB98", portrait: "https://storage.googleapis.com/pai-images/425a87239274291f_11712218.jpeg" },
+                    CONFLICT: { primary: "#36454F", accent: "#B22222", portrait: "https://storage.googleapis.com/pai-images/409893d5ad57cce3_11712219.jpeg" },
+                    NEUTRAL: { primary: "#B0C4DE", accent: "#778899", portrait: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg" }
+                 };
+                 const currentState = stateMap[state] || stateMap.NEUTRAL;
+                 body.className = `state-${state.toLowerCase()}`;
+                 document.documentElement.style.setProperty('--primary-color', currentState.primary);
+                 document.documentElement.style.setProperty('--accent-color', currentState.accent);
+                 kaiPortrait.src = currentState.portrait;
+            }
+
+            function appendMessage(sender, text) {
+                 const messageDiv = document.createElement('div');
+                 messageDiv.className = `message ${sender}-message`;
+                 messageDiv.textContent = text;
+                 chatLog.appendChild(messageDiv);
+                 chatLog.scrollTop = chatLog.scrollHeight;
+            }
+
+            // --- Event Listeners ---
+            restartButton.addEventListener('click', startSession);
+
+            // --- Initial Load ---
+            startSession();
+        });
+    </script>
+</body>
+</html>
