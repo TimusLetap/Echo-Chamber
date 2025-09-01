@@ -12,6 +12,7 @@
             --ui-text-color: #FFFFFF;
             --container-border-color: transparent;
             --container-box-shadow: none;
+            --mask-glow-opacity: 0.6;
         }
 
         /* Base styles */
@@ -19,13 +20,13 @@
         #app-container { display: flex; flex-direction: column; height: 100vh; background-color: var(--primary-color); transition: background-color 0.8s ease, border-color 0.8s ease, box-shadow 0.8s ease; border: 4px solid var(--container-border-color); box-shadow: var(--container-box-shadow); box-sizing: border-box; }
        
         /* State-specific styles */
-        .state-empathy { --primary-color: #AEC6CF; --accent-color: #98FB98; }
+        .state-empathy { --primary-color: #AEC6CF; --accent-color: #98FB98; --mask-glow-opacity: 1; }
         .state-empathy #app-container { background: linear-gradient(270deg, #AEC6CF, #98FB98, #F5F5DC); background-size: 600% 600%; animation: breathing-gradient 12s ease infinite; }
 
-        .state-conflict { --primary-color: #36454F; --accent-color: #B22222; --text-color: #f1f1f1; --ui-text-color: #f1f1f1;}
+        .state-conflict { --primary-color: #36454F; --accent-color: #B22222; --text-color: #f1f1f1; --ui-text-color: #f1f1f1; --mask-glow-opacity: 1; }
         .state-conflict #app-container { --container-border-color: var(--accent-color); --container-box-shadow: 0 0 20px 8px var(--accent-color); animation: pulse-glow 2.5s infinite; }
         
-        .state-logic { --primary-color: #D3D3D3; --accent-color: #4682B4; }
+        .state-logic { --primary-color: #D3D3D3; --accent-color: #4682B4; --mask-glow-opacity: 0.8; }
 
         /* Header with Stat Gauges */
         header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: rgba(0, 0, 0, 0.2); color: var(--ui-text-color); flex-shrink: 0; z-index: 10; transition: color 0.8s ease; }
@@ -46,14 +47,15 @@
         #music-toggle-button.playing { opacity: 1; }
 
         /* Core UI styles */
-        #portrait-container { text-align: center; padding: 15px; flex-shrink: 0; }
-        #kai-portrait { width: 120px; height: 120px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.5); transition: all 0.5s ease; object-fit: cover; }
         #chat-log { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
         .message { max-width: 75%; padding: 10px 15px; border-radius: 18px; animation: fadeIn 0.5s ease forwards; line-height: 1.5; }
-        .ai-message { background-color: #EAEAEA; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; }
+        
+        .ai-message { background-color: #EAEAEA; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; display: flex; align-items: center; }
         .user-message { background-color: var(--accent-color); color: var(--ui-text-color); align-self: flex-end; border-bottom-right-radius: 4px; }
         .state-conflict .ai-message { background-color: #555; color: #f1f1f1; }
         .state-conflict .user-message { color: #fff; }
+
+        .kai-mask { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; margin-right: 12px; background-color: var(--accent-color); transition: background-color 0.8s ease, box-shadow 0.8s ease; box-shadow: 0 0 12px var(--accent-color), inset 0 0 5px rgba(255,255,255,0.5); opacity: var(--mask-glow-opacity); }
 
         .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 10px 15px !important; }
         .typing-indicator span { width: 8px; height: 8px; background-color: var(--accent-color); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
@@ -101,10 +103,6 @@
             </div>
         </header>
 
-        <div id="portrait-container">
-            <img id="kai-portrait" src="https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg" alt="Kai's Portrait">
-        </div>
-
         <div id="chat-log"></div>
 
         <div id="interaction-area">
@@ -130,7 +128,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             // --- DOM Elements ---
             const body = document.body;
-            const kaiPortrait = document.getElementById('kai-portrait');
             const chatLog = document.getElementById('chat-log');
             const chatInputArea = document.getElementById('chat-input-area');
             const userInput = document.getElementById('user-input');
@@ -320,16 +317,8 @@
             }
 
             function updateUIState(state) {
-                const stateMap = {
-                    LOGIC: { class: "state-logic", portrait: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg" },
-                    EMPATHY: { class: "state-empathy", portrait: "https://storage.googleapis.com/pai-images/425a87239274291f_11712218.jpeg" },
-                    CONFLICT: { class: "state-conflict", portrait: "https://storage.googleapis.com/pai-images/409893d5ad57cce3_11712219.jpeg" },
-                    NEUTRAL: { class: "state-neutral", portrait: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg" }
-                };
                 const oldMode = currentMode;
-                const currentState = stateMap[state] || stateMap.NEUTRAL;
-                body.className = currentState.class;
-                kaiPortrait.src = currentState.portrait;
+                body.className = `state-${state.toLowerCase()}`;
                 currentMode = state.toLowerCase();
 
                 if (oldMode !== currentMode && isMusicPlaying) {
@@ -428,18 +417,28 @@
 
             // --- Utilities ---
             function appendMessage(sender, text) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${sender}-message`;
-                messageDiv.textContent = text;
-                chatLog.appendChild(messageDiv);
-                chatLog.scrollTop = chatLog.scrollHeight;
+                 const messageDiv = document.createElement('div');
+                 messageDiv.className = `message ${sender}-message`;
+                 
+                 if (sender === 'ai') {
+                    const mask = document.createElement('div');
+                    mask.className = 'kai-mask';
+                    messageDiv.appendChild(mask);
+                 }
+
+                 const textSpan = document.createElement('span');
+                 textSpan.textContent = text;
+                 messageDiv.appendChild(textSpan);
+
+                 chatLog.appendChild(messageDiv);
+                 chatLog.scrollTop = chatLog.scrollHeight;
             }
             
             function appendTypingIndicator() {
                 const indicator = document.createElement('div');
                 indicator.id = 'typing-indicator';
                 indicator.className = 'message ai-message typing-indicator';
-                indicator.innerHTML = `<span></span><span></span><span></span>`;
+                indicator.innerHTML = `<div class="kai-mask"></div><span></span><span></span><span></span>`;
                 chatLog.appendChild(indicator);
                 chatLog.scrollTop = chatLog.scrollHeight;
             }
@@ -461,7 +460,7 @@
             sendButton.addEventListener('click', () => handleUserInput(userInput.value));
             userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleUserInput(userInput.value); });
             musicToggleButton.addEventListener('click', toggleMusic);
-            restartButton.addEventListener('click', startSession);
+restartButton.addEventListener('click', startSession);
 
             // --- Initial Load ---
             startSession();
