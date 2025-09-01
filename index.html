@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Echo Chamber - Choice-Based Reflection</title>
+    <title>Echo Chamber - Choice-Driven Reflection</title>
     <style>
         :root {
             --primary-color: #D3D3D3;
@@ -26,11 +26,8 @@
         .message { max-width: 75%; padding: 10px 15px; border-radius: 18px; animation: fadeIn 0.5s ease forwards; }
         .ai-message { background-color: #EAEAEA; color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 4px; }
         .user-message { background-color: var(--accent-color); color: var(--ui-text-color); align-self: flex-end; border-bottom-right-radius: 4px; }
-        #chat-input-area { display: flex; padding: 15px; background: rgba(0, 0, 0, 0.1); flex-shrink: 0; }
-        #user-input { flex-grow: 1; border: none; padding: 12px; border-radius: 20px; font-size: 1em; }
-        #send-button { background-color: var(--accent-color); color: var(--ui-text-color); border: none; border-radius: 50%; width: 44px; height: 44px; margin-left: 10px; font-size: 1.5em; cursor: pointer; }
-
-        /* New Choice Container Styles */
+        
+        /* Choice Container is now the primary interaction method */
         #choice-container {
             display: flex;
             flex-direction: column;
@@ -38,6 +35,7 @@
             padding: 15px;
             background: rgba(0, 0, 0, 0.1);
             animation: fadeIn 0.5s;
+            flex-shrink: 0;
         }
         .choice-button {
             width: 100%;
@@ -65,4 +63,139 @@
         }
         .choice-button.logic strong { background-color: #4682B4; }
         .choice-button.empathy strong { background-color: #2E8B57; }
-        .choice-button.conflict
+        .choice-button.conflict strong { background-color: #B22222; }
+        .choice-button.neutral strong { background-color: #696969; }
+
+        /* Assessment Screen styles */
+        #assessment-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 100; animation: fadeIn 0.5s ease; }
+        #assessment-box { background: #fff; color: #333; padding: 30px; border-radius: 15px; width: 80%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        #assessment-box h2 { margin-top: 0; }
+        #assessment-summary { margin: 20px 0; font-size: 1.1em; line-height: 1.6; }
+        #restart-button { background-color: var(--accent-color); color: white; border: none; padding: 12px 25px; font-size: 1em; border-radius: 20px; cursor: pointer; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes breathing-gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes pulse-glow { 0% { box-shadow: 0 0 5px 0px var(--accent-color); } 50% { box-shadow: 0 0 20px 8px var(--accent-color); } 100% { box-shadow: 0 0 5px 0px var(--accent-color); } }
+    </style>
+</head>
+<body class="state-neutral">
+
+    <div id="app-container">
+        <header>
+            <div id="app-title">ECHO CHAMBER</div>
+            <div id="timer">05:00</div>
+        </header>
+
+        <div id="portrait-container">
+            <img id="kai-portrait" src="https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg" alt="Kai's Portrait">
+        </div>
+
+        <div id="chat-log"></div>
+
+        <div id="choice-container">
+            </div>
+    </div>
+
+    <div id="assessment-overlay">
+        <div id="assessment-box">
+            <h2>Reflection Complete</h2>
+            <p id="assessment-summary">Here is a summary of our conversation...</p>
+            <button id="restart-button">Start a New Reflection</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const body = document.body;
+            const kaiPortrait = document.getElementById('kai-portrait');
+            const chatLog = document.getElementById('chat-log');
+            const choiceContainer = document.getElementById('choice-container');
+            const timerDisplay = document.getElementById('timer');
+            const assessmentOverlay = document.getElementById('assessment-overlay');
+            const assessmentSummary = document.getElementById('assessment-summary');
+            const restartButton = document.getElementById('restart-button');
+
+            // --- State Variables ---
+            let sessionTimer;
+            let timeRemaining = 300;
+            const sessionStats = { LOGIC: 0, EMPATHY: 0, CONFLICT: 0, NEUTRAL: 0 };
+
+            // --- Simulated LLM Response Data ---
+            const responseData = {
+                getInitialResponse: () => ({
+                    kaiText: `The data streams are open for our 5-minute reflection. The current date is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. Which frequency shall we tune into first?`,
+                    choices: {
+                        logic: "I want to think about a specific problem.",
+                        empathy: "I'd like to explore how I'm feeling today.",
+                        conflict: "There's something that's been bothering me.",
+                        neutral: "I'm just open to seeing where this goes."
+                    }
+                }),
+                getResponse: (prevState) => {
+                    switch (prevState) {
+                        case 'LOGIC': return {
+                            kaiText: "A logical path. Breaking it down helps clear the noise. What's the next variable we should consider?",
+                            choices: { logic: "Let's define our terms.", empathy: "But what if the logic ignores the emotion?", conflict: "This is too rigid and analytical.", neutral: "What other paths are there?" }
+                        };
+                        case 'EMPATHY': return {
+                            kaiText: "Focusing on the feeling... it's like tuning into a specific, warm frequency. What does that warmth tell you?",
+                            choices: { logic: "How can I turn this feeling into an action?", empathy: "Let's stay with this feeling a bit longer.", conflict: "I'm worried this feeling will consume me.", neutral: "What other frequencies are there?" }
+                        };
+                        case 'CONFLICT': return {
+                            kaiText: "That's a dissonant tone, full of energy. Pushing back against the static can be important. What is it you're pushing against?",
+                            choices: { logic: "I need a better strategy to deal with this.", empathy: "I'm just trying to protect my own peace.", conflict: "I won't back down from this feeling.", neutral: "Maybe I should try a different approach." }
+                        };
+                        default: // NEUTRAL
+                        return {
+                            kaiText: "An interesting observation. That opens up a new data stream. Where does this new stream lead?",
+                            choices: { logic: "Let's analyze the new data.", empathy: "How does this new information make me feel?", conflict: "I'm not sure I like where this is going.", neutral: "I'm curious to see what happens next." }
+                        };
+                    }
+                }
+            };
+
+            function startSession() {
+                timeRemaining = 300;
+                Object.keys(sessionStats).forEach(k => sessionStats[k] = 0);
+                
+                assessmentOverlay.style.display = 'none';
+                chatLog.innerHTML = '';
+                choiceContainer.innerHTML = '';
+                
+                // Initial response from Kai
+                const initialResponse = responseData.getInitialResponse();
+                appendMessage('ai', initialResponse.kaiText);
+                displayChoices(initialResponse.choices, 'NEUTRAL');
+                updateUIState('NEUTRAL'); // Set initial UI state
+
+                updateTimerDisplay();
+                sessionTimer = setInterval(() => {
+                    timeRemaining--;
+                    updateTimerDisplay();
+                    if (timeRemaining <= 0) endSession();
+                }, 1000);
+            }
+            
+            function endSession() {
+                clearInterval(sessionTimer);
+                timeRemaining = 0;
+                updateTimerDisplay();
+                choiceContainer.style.display = 'none';
+                appendMessage('ai', "That's time. Let me process the echoes from our conversation...");
+                setTimeout(showAssessment, 2000);
+            }
+
+            function showAssessment() {
+                const total = Object.values(sessionStats).reduce((a, b) => a + b, 0);
+                let summaryText = "Our connection was too brief. Let's try talking more next time.";
+
+                if (total > 0) {
+                    const empathyPercent = Math.round((sessionStats.EMPATHY / total) * 100);
+                    const logicPercent = Math.round((sessionStats.LOGIC / total) * 100);
+                    const conflictPercent = Math.round((sessionStats.CONFLICT / total) * 100);
+                    
+                    let dominantTrait = "a balanced and open-minded approach";
+                    if (logicPercent > 50) dominantTrait = "a very analytical and structured approach";
+                    if (empathyPercent > 50) dominantTrait = "a deeply caring and intuitive perspective";
+                    if
