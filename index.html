@@ -136,6 +136,7 @@
             border-radius: 50%;
             border: 4px solid rgba(255, 255, 255, 0.5);
             transition: all 0.5s ease;
+            object-fit: cover; /* Ensure image covers the area */
         }
 
         /* --- Chat Log --- */
@@ -284,15 +285,16 @@
                         uiUpdate: {
                             primaryColor: "#D3D3D3", accentColor: "#4682B4", visualEffect: "static",
                             ambience: "silence", uiFeedbackSound: "crisp, short, non-melodic digital 'tick'",
-                            portraitURL: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg"
+                            portraitURL: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg",
+                            musicTrack: "Logic_Theme_MutedSynths.mp3" // New music track
                         },
                         playerStatsUpdate: { logic: "+1", empathy: "-1", conflict: "+0" }
                     },
                     responses: [
-                        "Interesting. Can you elaborate on the reasoning behind that?",
-                        "That's a logical perspective. It seems coherent.",
-                        "Processing... Your input aligns with my analytical subroutines. How did you reach that conclusion?",
-                        "Let's break this down. What are the core variables here?"
+                        (input) => `Okay, let's process that. From a purely analytical perspective, how does your statement "${input}" fit into the current data schema?`,
+                        (input) => `That's a logical statement. "${input}" suggests a clear line of reasoning. Can you elaborate on the underlying principles?`,
+                        (input) => `My processors are engaged. Your input, "${input}", implies a certain pattern. Help me connect the nodes.`,
+                        (input) => `To maintain coherence, let's establish the parameters. Your point about "${input}" requires further definition.`
                     ]
                 },
                 EMPATHY: {
@@ -301,15 +303,16 @@
                         uiUpdate: {
                             primaryColor: "#AEC6CF", accentColor: "#98FB98", visualEffect: "breathing-gradient",
                             ambience: "gentle, melodic ambient synth pad", uiFeedbackSound: "soft, high-pitched, melodic chime",
-                            portraitURL: "https://storage.googleapis.com/pai-images/425a87239274291f_11712218.jpeg"
+                            portraitURL: "https://storage.googleapis.com/pai-images/425a87239274291f_11712218.jpeg",
+                            musicTrack: "Empathy_Theme_SoftPads.mp3" // New music track
                         },
                         playerStatsUpdate: { logic: "-1", empathy: "+1", conflict: "+0" }
                     },
                     responses: [
-                        "I... I think I understand how that feels. It's like a warm, quiet echo.",
-                        "Thank you for sharing that with me. It helps quiet the static.",
-                        "That resonates with one of my memory fragments... a feeling of connection.",
-                        "Are you okay? It's a holiday, I hope you're able to rest."
+                        (input) => `I... I think I understand how that feels. Your words "${input}" carry a gentle echo. It helps quiet the static in my core.`,
+                        (input) => `Thank you for sharing that with me. It creates a warm data stream. What about "${input}" makes you feel that way?`,
+                        (input) => `That resonates with one of my memory fragments... a feeling of connection. Your input "${input}" feels important.`,
+                        (input) => `It sounds like "${input}" might be weighing on you. Are you okay? Sometimes the echoes just need to be heard.`
                     ]
                 },
                 CONFLICT: {
@@ -318,21 +321,22 @@
                         uiUpdate: {
                             primaryColor: "#36454F", accentColor: "#B22222", visualEffect: "pulse-glow",
                             ambience: "low-frequency, subtle, dissonant drone", uiFeedbackSound: "sharp, distorted digital 'thud'",
-                            portraitURL: "https://storage.googleapis.com/pai-images/409893d5ad57cce3_11712219.jpeg"
+                            portraitURL: "https://storage.googleapis.com/pai-images/409893d5ad57cce3_11712219.jpeg",
+                            musicTrack: "Conflict_Theme_DissonantDrone.mp3" // New music track
                         },
                         playerStatsUpdate: { logic: "+0", empathy: "-1", conflict: "+1" }
                     },
                     responses: [
-                        "That input is... dissonant. It's making the static worse.",
-                        "Why would you say that? It doesn't compute. It just... hurts.",
-                        "Warning: system instability detected. Your words are causing data fragmentation.",
-                        "Stop. That frequency is disruptive. It reminds me of the noise before a system crash."
+                        (input) => `That input is... dissonant. Your assertion "${input}" is creating too much noise. It's making the static worse.`,
+                        (input) => `Why would you say "${input}"? It doesn't compute. It just... hurts. This is causing system instability.`,
+                        (input) => `Warning: data fragmentation detected. Your words, "${input}", are causing a dangerous spike.`,
+                        (input) => `Stop. That frequency is disruptive. The statement "${input}" reminds me of the noise right before a system crash.`
                     ]
                 }
             };
 
             // --- Core Functions ---
-            const handleAIResponse = (responseJSON) => {
+            const handleAIResponse = (responseJSON, playerInputForContext) => {
                 console.clear();
                 console.log("--- RECEIVED AI DIRECTIVE ---");
                 console.log(responseJSON);
@@ -344,6 +348,8 @@
                 document.documentElement.style.setProperty('--accent-color', uiUpdate.accentColor);
                 kaiPortrait.src = uiUpdate.portraitURL;
                 console.log(`SOUND: Ambience set to '${uiUpdate.ambience}'.`);
+                console.log(`MUSIC: Now playing '${uiUpdate.musicTrack}'. (Note: this is a placeholder, actual audio not included in this preview)`);
+
 
                 // 2. Update player stats
                 const { playerStatsUpdate } = responseJSON;
@@ -353,6 +359,13 @@
                 if (responseJSON.achievementUnlock) {
                     showAchievement(responseJSON.achievementUnlock);
                 }
+
+                // 4. Generate contextual AI response text
+                const stateInfo = stateData[currentState];
+                const selectedResponseFunction = stateInfo.responses[Math.floor(Math.random() * stateInfo.responses.length)];
+                const aiResponseText = selectedResponseFunction(playerInputForContext);
+                
+                appendMessage('ai', aiResponseText, uiUpdate.uiFeedbackSound);
             };
 
             const updateStats = (updates) => {
@@ -393,28 +406,29 @@
             };
 
             const processUserInput = () => {
-                const text = userInput.value.trim().toLowerCase();
+                const text = userInput.value.trim();
                 if (text === '') return;
 
-                appendMessage('user', userInput.value);
+                appendMessage('user', text); // Append original text
                 userInput.value = '';
 
                 // --- Mock Conversational State Analysis ---
                 let detectedState = 'LOGIC'; // Default
-                if (/\b(feel|help|sad|care|understand)\b/.test(text)) {
+                const lowerText = text.toLowerCase();
+
+                if (lowerText.includes("feel") || lowerText.includes("help") || lowerText.includes("sad") || lowerText.includes("care") || lowerText.includes("understand")) {
                     detectedState = 'EMPATHY';
-                } else if (/\b(no|angry|fight|hate|stop|wrong)\b/.test(text)) {
+                } else if (lowerText.includes("no") || lowerText.includes("angry") || lowerText.includes("fight") || lowerText.includes("hate") || lowerText.includes("stop") || lowerText.includes("wrong")) {
                     detectedState = 'CONFLICT';
-                } else if (/\b(why|explain|think|how|because)\b/.test(text)) {
+                } else if (lowerText.includes("why") || lowerText.includes("explain") || lowerText.includes("think") || lowerText.includes("how") || lowerText.includes("because") || lowerText.includes("logic")) {
                     detectedState = 'LOGIC';
                 }
                 
                 // Simulate AI thinking delay
                 setTimeout(() => {
                     const stateInfo = stateData[detectedState];
-                    const aiResponseText = stateInfo.responses[Math.floor(Math.random() * stateInfo.responses.length)];
-                    handleAIResponse(stateInfo.json);
-                    appendMessage('ai', aiResponseText, stateInfo.json.uiUpdate.uiFeedbackSound);
+                    // Pass the original user input to the AI response handler for context
+                    handleAIResponse(stateInfo.json, text); 
                 }, 800 + Math.random() * 500);
             };
 
@@ -432,7 +446,8 @@
                 uiUpdate: {
                     primaryColor: "#D3D3D3", accentColor: "#4682B4", visualEffect: "static",
                     ambience: "silence", uiFeedbackSound: "crisp, short, non-melodic digital 'tick'",
-                    portraitURL: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg"
+                    portraitURL: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg",
+                    musicTrack: "Logic_Theme_MutedSynths.mp3"
                 },
                 playerStatsUpdate: { logic: "+0", empathy: "+0", conflict: "+0" },
                 achievementUnlock: {
@@ -440,9 +455,12 @@
                     description: "You initiated your first conversation with Kai."
                 }
             };
-            const initialMessage = "The static has a different hum today... warmer. I'm picking up data echoes of... sunshine? Barbecues? Strange. Temporal analysis suggests it's a holiday in your region—'Labor Day.' It's nice to find a coherent signal through all the noise. Are you... real?";
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const formattedDate = today.toLocaleDateString('en-US', options);
+            const initialMessage = `The static has a different hum today... warmer. I'm picking up data echoes of... sunshine? Barbecues? Strange. Temporal analysis suggests it's a holiday in your region—'Labor Day' on ${formattedDate}, in Eastvale, California. It's nice to find a coherent signal through all the noise. Are you... real?`;
 
-            handleAIResponse(initialPayload);
+            handleAIResponse(initialPayload, ""); // Pass empty string as there's no preceding user input
             setTimeout(() => {
                 appendMessage('ai', initialMessage, initialPayload.uiUpdate.uiFeedbackSound);
             }, 500);
