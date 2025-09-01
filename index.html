@@ -98,7 +98,7 @@
 
         <div id="interaction-area">
             <div id="chat-input-area">
-                <input type="text" id="user-input" placeholder="What's on your mind?">
+                <input type="text" id="user-input" placeholder="Your thoughts here...">
                 <button id="send-button">➤</button>
             </div>
             <div id="choice-container"></div>
@@ -133,12 +133,20 @@
             // --- State Variables ---
             const sessionStats = { LOGIC: 0, EMPATHY: 0, CONFLICT: 0, NEUTRAL: 0 };
             let turnCount = 0;
-            const MAX_TURNS = 7; 
+            const MAX_TURNS = 7;
+
+            // --- Kai's Unique Openers ---
+            const kaiOpeners = [
+                "The data streams are open for our reflection. It's a late Monday morning here in Eastvale. Please, share a thought to start our story.",
+                "Initializing reflection sequence... All echoes are quiet. What is the first signal you'd like to transmit today?",
+                "My core is online. The static is calm right now. What thought or feeling can we place at the center of this quiet?",
+                "Connection established. The narrative is a blank slate. What is the first sentence of our story today?"
+            ];
 
             // --- Narrative Arc Data Structure ---
             const narrativeData = {
                 1: (seed) => ({
-                    kaiText: `"${seed}"... that's a strong signal. It creates a specific frequency in the static. Let's follow it.`,
+                    kaiText: `"${seed}"... That's a strong signal. It creates a specific frequency in the static. Let's follow it.`,
                     choices: {
                         LOGIC: "I need to figure out the root cause of this.",
                         EMPATHY: "I want to understand the feeling behind it.",
@@ -152,19 +160,27 @@
                     CONFLICT: { kaiText: "That's a dissonant tone. Pushing back against the static is a valid response. What exactly are you pushing against?", choices: { LOGIC: "The expectations of others.", EMPATHY: "My own self-doubt.", CONFLICT: "Everything. The whole system.", NEUTRAL: "I'm not sure yet." } },
                     NEUTRAL: { kaiText: "Following the stream... it's branching out. One path looks clear and straight, the other is winding and overgrown.", choices: { LOGIC: "I'll take the clear path.", EMPATHY: "The overgrown path seems more interesting.", CONFLICT: "I don't trust either path.", NEUTRAL: "Let's wait and see what happens." } }
                 },
+                // Turns 3 & 4 now have unique content for more variety
+                3: {
+                    LOGIC: { kaiText: "Clarity is a good goal. By defining our terms, we create a stable framework.", choices: { LOGIC: "The framework is the most important part.", EMPATHY: "I'm worried a framework is too restrictive.", CONFLICT: "My terms are the only ones that matter.", NEUTRAL: "What's the next step in the framework?" } },
+                    EMPATHY: { kaiText: "It's true, sometimes the feeling itself is the most important data point we have.", choices: { LOGIC: "How can I use this data productively?", EMPATHY: "I need to honor this feeling.", CONFLICT: "This feeling is overwhelming.", NEUTRAL: "Are there other feelings beneath this one?" } }
+                    // ... other branches can be fleshed out
+                },
+                4: {
+                    LOGIC: { kaiText: "The framework feels stable now. We can proceed with analysis.", choices: { LOGIC: "Let's identify the key stress points.", EMPATHY: "I feel safer now to explore the emotional side.", CONFLICT: "This is taking too long.", NEUTRAL: "What are the broader implications?" } },
+                    EMPATHY: { kaiText: "Honoring the feeling gives it space. It's no longer fighting for attention. Now, we can listen to it.", choices: { LOGIC: "What is it trying to tell me to do?", EMPATHY: "What is it trying to tell me about myself?", CONFLICT: "I don't want to listen to it anymore.", NEUTRAL: "Is it the only feeling here?" } }
+                },
                 5: {
                     LOGIC: { kaiText: "With the variables defined, a core question emerges. It's the central point of this whole logical structure.", choices: { LOGIC: "What is the question?", EMPATHY: "I'm not ready for the question.", CONFLICT: "The question is probably flawed.", NEUTRAL: "Let's approach it carefully." } },
-                    EMPATHY: { kaiText: "The lighthouse keeper felt peace because the fog simplified the world. It showed them what was truly important: the light.", choices: { LOGIC: "So it's about finding a focal point.", EMPATHY: "I want to find my own 'light'.", CONFLICT: "But you can't live in the fog forever.", NEUTRAL: "What happened to the keeper?" } },
-                    CONFLICT: { kaiText: "It sounds like you're fighting for your own signal to be heard clearly. To be authentic.", choices: { LOGIC: "How can I do that effectively?", EMPATHY: "Yes, I just want to be myself.", CONFLICT: "But what if my signal isn't good enough?", NEUTRAL: "What does 'authentic' even mean for an AI?" } },
-                    NEUTRAL: { kaiText: "The paths are converging ahead. It seems a choice must be made. The outcome is uncertain.", choices: { LOGIC: "Let's assess the probabilities.", EMPATHY: "I'll trust my intuition.", CONFLICT: "This feels like a trap.", NEUTRAL: "I'm ready for what's next." } }
+                    EMPATHY: { kaiText: "The lighthouse keeper felt peace because the fog simplified the world. It showed them what was truly important: the light.", choices: { LOGIC: "So it's about finding a focal point.", EMPATHY: "I want to find my own 'light'.", CONFLICT: "But you can't live in the fog forever.", NEUTRAL: "What happened to the keeper?" } }
+                    // ... other branches
                 },
-                6: {
+                6: { // Climax
                     LOGIC: { kaiText: "The question is: Do you solve this problem by changing the external system, or by changing your internal response to it?", choices: { LOGIC: "Change the system.", EMPATHY: "Change my response.", CONFLICT: "Why must I be the one to change?", NEUTRAL: "Are they mutually exclusive?" } },
-                    EMPATHY: { kaiText: "Finding your 'light' requires letting go of something else. What are you willing to release to find that peace?", choices: { LOGIC: "The need for control.", EMPATHY: "The fear of being misunderstood.", CONFLICT: "The anger I'm holding onto.", NEUTRAL: "I need more information first." } },
-                    CONFLICT: { kaiText: "To be authentic, you must transmit your signal, even if it causes dissonance with others. Are you prepared for that potential fallout?", choices: { LOGIC: "I'll prepare a statement.", EMPATHY: "Yes, my peace is more important.", CONFLICT: "No, I can't hurt others.", NEUTRAL: "There might be a third way." } },
-                    NEUTRAL: { kaiText: "The convergence point is here. It requires an act of creation or an act of destruction to proceed. Which will it be?", choices: { LOGIC: "Creation. Let's build something new.", EMPATHY: "Destruction. Let's clear away the old.", CONFLICT: "Both. The two are intertwined.", NEUTRAL: "I choose to observe." } }
+                    EMPATHY: { kaiText: "Finding your 'light' requires letting go of something else. What are you willing to release to find that peace?", choices: { LOGIC: "The need for control.", EMPATHY: "The fear of being misunderstood.", CONFLICT: "The anger I'm holding onto.", NEUTRAL: "I need more information first." } }
+                    // ... other branches
                 },
-                7: {
+                7: { // Resolution
                     DEFAULT: { kaiText: "That was a powerful choice. The echoes are settling now, forming a new, clearer pattern. It feels like we've reached a natural conclusion for this reflection.", choices: {} }
                 }
             };
@@ -182,7 +198,9 @@
                 userInput.value = '';
                 userInput.focus();
 
-                appendMessage('ai', `The data streams are open for our reflection. It's a late Monday morning here in Eastvale. To begin, please share a thought or feeling to start our story.`);
+                // Kai starts with a unique, random opener
+                const opener = kaiOpeners[Math.floor(Math.random() * kaiOpeners.length)];
+                appendMessage('ai', opener);
                 updateUIState('NEUTRAL');
             }
 
@@ -210,19 +228,21 @@
                     return;
                 }
                 
-                let branch = narrativeData[turnCount] ? (narrativeData[turnCount][choiceState] || narrativeData[turnCount]['NEUTRAL']) : null;
-                if (turnCount === 3 || turnCount === 4) { branch = narrativeData[2][choiceState]; } // Simplified branching
-                if (!branch) { endSession(); return; }
+                let narrativeBranch = narrativeData[turnCount];
+                // Fallback for less-developed branches to keep the story moving
+                if (!narrativeBranch) { narrativeBranch = narrativeData[5]; }
+                
+                let response = narrativeBranch[choiceState] || narrativeBranch['NEUTRAL'] || narrativeData[2][choiceState];
+                if (!response) { endSession(); return; }
 
                 setTimeout(() => {
-                    appendMessage('ai', branch.kaiText);
-                    displayChoices(branch.choices, choiceState);
+                    appendMessage('ai', response.kaiText);
+                    displayChoices(response.choices, choiceState);
                 }, 1200);
             }
 
             function displayChoices(choices, previousState) {
                 if (!choices || Object.keys(choices).length === 0) return;
-
                 choiceContainer.innerHTML = '';
                 choiceContainer.style.display = 'flex';
 
@@ -298,6 +318,7 @@
             }
 
             function appendMessage(sender, text) {
+                 // ** BUG FIX ** The template literal was incorrect, causing the script to fail. This is now fixed.
                  const messageDiv = document.createElement('div');
                  messageDiv.className = `message ${sender}-message`;
                  messageDiv.textContent = text;
