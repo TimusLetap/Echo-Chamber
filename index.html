@@ -172,10 +172,7 @@
                 chatLog.innerHTML = '';
                 toggleInput(true, true);
                 
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-                const dayString = now.toLocaleDateString('en-US', { weekday: 'long' });
-                const opener = `The data streams are open for our reflection. It's a ${dayString.toLowerCase()} ${timeString} here in Eastvale. Please, share a thought to start our story.`;
+                const opener = `The data streams are open for our reflection. It's a Monday afternoon here in Eastvale. Please, share a thought to start our story.`;
                 
                 appendMessage('ai', opener);
                 conversationHistory.push({ role: "model", parts: [{ text: opener }] });
