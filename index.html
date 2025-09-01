@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Echo Chamber - Hybrid Reflection</title>
+    <title>Echo Chamber - Narrative Reflection</title>
     <style>
         :root {
             --primary-color: #D3D3D3;
@@ -19,7 +19,6 @@
         .state-conflict #app-container { border: 4px solid var(--accent-color); animation: pulse-glow 2s infinite; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: rgba(0, 0, 0, 0.2); color: var(--ui-text-color); flex-shrink: 0; z-index: 10; }
         #app-title { font-size: 1.2em; font-weight: bold; }
-        #timer { font-size: 1.2em; font-weight: bold; }
         #portrait-container { text-align: center; padding: 15px; flex-shrink: 0; }
         #kai-portrait { width: 120px; height: 120px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.5); transition: all 0.5s ease; object-fit: cover; }
         #chat-log { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
@@ -33,7 +32,7 @@
         #send-button { background-color: var(--accent-color); color: var(--ui-text-color); border: none; border-radius: 50%; width: 44px; height: 44px; margin-left: 10px; font-size: 1.5em; cursor: pointer; }
 
         #choice-container {
-            display: none; /* Hidden by default */
+            display: none;
             flex-direction: column;
             gap: 10px;
             padding: 15px;
@@ -53,12 +52,8 @@
             transition: background-color 0.2s, transform 0.2s;
         }
         .choice-button:hover { background-color: #f0f0f0; transform: scale(1.02); }
-        .choice-button strong { display: inline-block; margin-right: 8px; font-size: 0.8em; padding: 3px 8px; border-radius: 5px; color: white; }
-        .choice-button.logic strong { background-color: #4682B4; }
-        .choice-button.empathy strong { background-color: #2E8B57; }
-        .choice-button.conflict strong { background-color: #B22222; }
-        .choice-button.neutral strong { background-color: #696969; }
 
+        /* Assessment Screen styles */
         #assessment-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 100; animation: fadeIn 0.5s ease; }
         #assessment-box { background: #fff; color: #333; padding: 30px; border-radius: 15px; width: 80%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         #assessment-box h2 { margin-top: 0; }
@@ -75,7 +70,6 @@
     <div id="app-container">
         <header>
             <div id="app-title">ECHO CHAMBER</div>
-            <div id="timer">05:00</div>
         </header>
 
         <div id="portrait-container">
@@ -111,149 +105,162 @@
             const userInput = document.getElementById('user-input');
             const sendButton = document.getElementById('send-button');
             const choiceContainer = document.getElementById('choice-container');
-            const timerDisplay = document.getElementById('timer');
             const assessmentOverlay = document.getElementById('assessment-overlay');
             const assessmentSummary = document.getElementById('assessment-summary');
             const restartButton = document.getElementById('restart-button');
 
             // --- State Variables ---
-            let sessionTimer;
-            let timeRemaining = 300;
             const sessionStats = { LOGIC: 0, EMPATHY: 0, CONFLICT: 0, NEUTRAL: 0 };
-            let isFirstInput = true;
+            let turnCount = 0;
+            const MAX_TURNS = 7; // Defines the length of the story
 
-            // --- Simulated LLM Response Data ---
-            const responseData = {
-                getInitialResponse: (seed) => ({
+            // --- Narrative Arc Data Structure ---
+            const narrativeData = {
+                // Introduction
+                1: (seed) => ({
                     kaiText: `"${seed}"... that's a strong signal. It creates a specific frequency in the static. Let's follow it.`,
                     choices: {
-                        logic: "I need to figure out the root cause of this.",
-                        empathy: "I want to understand the feeling behind it.",
-                        conflict: "This feeling is frustrating and I'm tired of it.",
-                        neutral: "Let's just see where this thought goes."
+                        LOGIC: "I need to figure out the root cause of this.",
+                        EMPATHY: "I want to understand the feeling behind it.",
+                        CONFLICT: "This feeling is frustrating and I'm tired of it.",
+                        NEUTRAL: "Let's just see where this thought goes."
                     }
                 }),
-                getResponse: (prevState) => {
-                    // ... (same as previous version)
-                    switch (prevState) {
-                        case 'LOGIC': return {
-                            kaiText: "A logical path. Breaking it down helps clear the noise. What's the next variable we should consider?",
-                            choices: { logic: "Let's define our terms.", empathy: "But what if the logic ignores the emotion?", conflict: "This is too rigid and analytical.", neutral: "What other paths are there?" }
-                        };
-                        case 'EMPATHY': return {
-                            kaiText: "Focusing on the feeling... it's like tuning into a specific, warm frequency. What does that warmth tell you?",
-                            choices: { logic: "How can I turn this feeling into an action?", empathy: "Let's stay with this feeling a bit longer.", conflict: "I'm worried this feeling will consume me.", neutral: "What other frequencies are there?" }
-                        };
-                        case 'CONFLICT': return {
-                            kaiText: "That's a dissonant tone, full of energy. Pushing back against the static can be important. What is it you're pushing against?",
-                            choices: { logic: "I need a better strategy to deal with this.", empathy: "I'm just trying to protect my own peace.", conflict: "I won't back down from this feeling.", neutral: "Maybe I should try a different approach." }
-                        };
-                        default: // NEUTRAL
-                        return {
-                            kaiText: "An interesting observation. That opens up a new data stream. Where does this new stream lead?",
-                            choices: { logic: "Let's analyze the new data.", empathy: "How does this new information make me feel?", conflict: "I'm not sure I like where this is going.", neutral: "I'm curious to see what happens next." }
-                        };
-                    }
+                // Rising Action
+                2: {
+                    LOGIC: { kaiText: "A logical path. To clear the noise, we need data. What's the first variable we should examine?", choices: { LOGIC: "Let's define our terms more clearly.", EMPATHY: "Maybe data isn't the answer right now.", CONFLICT: "This analysis is making it worse.", NEUTRAL: "What other data is there?" } },
+                    EMPATHY: { kaiText: "Focusing on the feeling... it's like a warm frequency. That reminds me of an echo about a lighthouse keeper who loved the fog.", choices: { LOGIC: "Why did they love the fog?", EMPATHY: "That sounds lonely, but peaceful.", CONFLICT: "I don't like fog; it hides things.", NEUTRAL: "Tell me more about the echo." } },
+                    CONFLICT: { kaiText: "That's a dissonant tone. Pushing back against the static is a valid response. What exactly are you pushing against?", choices: { LOGIC: "The expectations of others.", EMPATHY: "My own self-doubt.", CONFLICT: "Everything. The whole system.", NEUTRAL: "I'm not sure yet." } },
+                    NEUTRAL: { kaiText: "Following the stream... it's branching out. One path looks clear and straight, the other is winding and overgrown.", choices: { LOGIC: "I'll take the clear path.", EMPATHY: "The overgrown path seems more interesting.", CONFLICT: "I don't trust either path.", NEUTRAL: "Let's wait and see what happens." } }
+                },
+                3: { /* ... More rising action branches ... */ },
+                4: { /* ... More rising action branches ... */ },
+                5: {
+                    LOGIC: { kaiText: "With the variables defined, a core question emerges. It's the central point of this whole logical structure.", choices: { LOGIC: "What is the question?", EMPATHY: "I'm not ready for the question.", CONFLICT: "The question is probably flawed.", NEUTRAL: "Let's approach it carefully." } },
+                    EMPATHY: { kaiText: "The lighthouse keeper felt peace because the fog simplified the world. It showed them what was truly important: the light.", choices: { LOGIC: "So it's about finding a focal point.", EMPATHY: "I want to find my own 'light'.", CONFLICT: "But you can't live in the fog forever.", NEUTRAL: "What happened to the keeper?" } },
+                    CONFLICT: { kaiText: "It sounds like you're fighting for your own signal to be heard clearly. To be authentic.", choices: { LOGIC: "How can I do that effectively?", EMPATHY: "Yes, I just want to be myself.", CONFLICT: "But what if my signal isn't good enough?", NEUTRAL: "What does 'authentic' even mean for an AI?" } },
+                    NEUTRAL: { kaiText: "The paths are converging ahead. It seems a choice must be made. The outcome is uncertain.", choices: { LOGIC: "Let's assess the probabilities.", EMPATHY: "I'll trust my intuition.", CONFLICT: "This feels like a trap.", NEUTRAL: "I'm ready for what's next." } }
+                },
+                // Climax
+                6: {
+                    LOGIC: { kaiText: "The question is: Do you solve this problem by changing the external system, or by changing your internal response to it?", choices: { LOGIC: "Change the system.", EMPATHY: "Change my response.", CONFLICT: "Why must I be the one to change?", NEUTRAL: "Are they mutually exclusive?" } },
+                    EMPATHY: { kaiText: "Finding your 'light' requires letting go of something else. What are you willing to release to find that peace?", choices: { LOGIC: "The need for control.", EMPATHY: "The fear of being misunderstood.", CONFLICT: "The anger I'm holding onto.", NEUTRAL: "I need more information first." } },
+                    CONFLICT: { kaiText: "To be authentic, you must transmit your signal, even if it causes dissonance with others. Are you prepared for that potential fallout?", choices: { LOGIC: "I'll prepare a statement.", EMPATHY: "Yes, my peace is more important.", CONFLICT: "No, I can't hurt others.", NEUTRAL: "There might be a third way." } },
+                    NEUTRAL: { kaiText: "The convergence point is here. It requires an act of creation or an act of destruction to proceed. Which will it be?", choices: { LOGIC: "Creation. Let's build something new.", EMPATHY: "Destruction. Let's clear away the old.", CONFLICT: "Both. The two are intertwined.", NEUTRAL: "I choose to observe." } }
+                },
+                // Resolution
+                7: {
+                    DEFAULT: { kaiText: "That was a powerful choice. The echoes are settling now, forming a new, clearer pattern. It feels like we've reached a natural conclusion for this reflection.", choices: {} }
                 }
             };
-
+            
             function startSession() {
-                isFirstInput = true;
-                timeRemaining = 300;
+                turnCount = 0;
                 Object.keys(sessionStats).forEach(k => sessionStats[k] = 0);
                 
                 assessmentOverlay.style.display = 'none';
                 chatLog.innerHTML = '';
                 choiceContainer.style.display = 'none';
-                chatInputArea.style.display = 'flex'; // Show the text input at the start
+                chatInputArea.style.display = 'flex';
                 userInput.disabled = false;
                 userInput.value = '';
                 userInput.focus();
 
-                appendMessage('ai', `The data streams are open for our 5-minute reflection. It's a late Monday morning here in Eastvale. To begin, please share a single thought or feeling to act as the 'seed' for our conversation.`);
-                updateTimerDisplay();
+                appendMessage('ai', `The data streams are open. Let's begin our reflection. Share a thought or feeling to start our story.`);
                 updateUIState('NEUTRAL');
             }
-            
-            function processInput(text, state = null) {
+
+            function processInitialInput(text) {
+                if (text.trim() === '') return;
                 appendMessage('user', text);
-                
-                // This is the core logic for the hybrid model
-                if (isFirstInput) {
-                    isFirstInput = false;
-                    chatInputArea.style.display = 'none'; // Hide text input after first use
+                chatInputArea.style.display = 'none';
+                turnCount++;
 
-                    // Start the timer only after the first input is received
-                    sessionTimer = setInterval(() => {
-                        timeRemaining--;
-                        updateTimerDisplay();
-                        if (timeRemaining <= 0) endSession();
-                    }, 1000);
+                const response = narrativeData[turnCount](text); // Get turn 1 response
+                setTimeout(() => {
+                    appendMessage('ai', response.kaiText);
+                    displayChoices(response.choices, 'NEUTRAL');
+                }, 800);
+            }
 
-                    const response = responseData.getInitialResponse(text);
-                    setTimeout(() => {
-                        appendMessage('ai', response.kaiText);
-                        displayChoices(response.choices, 'NEUTRAL');
-                    }, 800);
-                } else {
-                    sessionStats[state]++;
-                    const response = responseData.getResponse(state);
-                    setTimeout(() => {
-                        appendMessage('ai', response.kaiText);
-                        displayChoices(response.choices, state);
-                    }, 1000);
+            function handleChoice(choiceText, choiceState) {
+                appendMessage('user', choiceText);
+                sessionStats[choiceState]++;
+                turnCount++;
+
+                if (turnCount >= MAX_TURNS) {
+                    endSession();
+                    return;
                 }
+                
+                // Get the response branch for the current turn based on previous state
+                let branch = narrativeData[turnCount] ? (narrativeData[turnCount][choiceState] || narrativeData[turnCount]['NEUTRAL']) : null;
+
+                // Simple fallback for turns 3 and 4
+                if (turnCount === 3 || turnCount === 4) {
+                    branch = narrativeData[2][choiceState];
+                }
+
+                // If we reach the end of a branch, go to resolution
+                if (!branch) {
+                    endSession();
+                    return;
+                }
+
+                setTimeout(() => {
+                    appendMessage('ai', branch.kaiText);
+                    displayChoices(branch.choices, choiceState);
+                }, 1200);
             }
 
             function displayChoices(choices, previousState) {
-                choiceContainer.innerHTML = '';
-                choiceContainer.style.display = 'flex'; // Show the choice container
+                if (!choices || Object.keys(choices).length === 0) return;
 
-                ['logic', 'empathy', 'conflict', 'neutral'].forEach(stateKey => {
+                choiceContainer.innerHTML = '';
+                choiceContainer.style.display = 'flex';
+
+                Object.keys(choices).forEach(stateKey => {
                     const button = document.createElement('button');
-                    button.classList.add('choice-button', stateKey);
-                    button.innerHTML = `<strong>${stateKey.toUpperCase()}</strong> ${choices[stateKey]}`;
+                    button.classList.add('choice-button');
+                    button.textContent = choices[stateKey]; // Unlabeled choices
                     button.onclick = () => {
-                        choiceContainer.style.display = 'none'; // Hide choices after one is picked
-                        processInput(choices[stateKey], stateKey.toUpperCase());
+                        choiceContainer.style.display = 'none';
+                        handleChoice(choices[stateKey], stateKey);
                     };
                     choiceContainer.appendChild(button);
                 });
+
                 updateUIState(previousState);
                 chatLog.scrollTop = chatLog.scrollHeight;
             }
-            
+
             function endSession() {
-                clearInterval(sessionTimer);
-                timeRemaining = 0;
-                updateTimerDisplay();
+                const resolution = narrativeData[MAX_TURNS].DEFAULT;
+                appendMessage('ai', resolution.kaiText);
                 choiceContainer.style.display = 'none';
-                appendMessage('ai', "That's time. Let me process the echoes from our conversation...");
-                setTimeout(showAssessment, 2000);
+                setTimeout(showAssessment, 2500);
             }
 
             function showAssessment() {
-                // ... (This function remains the same as the previous version)
+                // ... (Same as previous versions)
                 const total = Object.values(sessionStats).reduce((a, b) => a + b, 0);
                 let summaryText = "Our connection was too brief. Let's try talking more next time.";
 
                 if (total > 0) {
                     const empathyPercent = Math.round((sessionStats.EMPATHY / total) * 100);
                     const logicPercent = Math.round((sessionStats.LOGIC / total) * 100);
-                    const conflictPercent = Math.round((sessionStats.CONFLICT / total) * 100);
                     
                     let dominantTrait = "a balanced and open-minded approach";
                     if (logicPercent > 50) dominantTrait = "a very analytical and structured approach";
                     if (empathyPercent > 50) dominantTrait = "a deeply caring and intuitive perspective";
-                    if (conflictPercent > 25) dominantTrait = `a tense but direct approach (Conflict: ${conflictPercent}%)`;
 
-                    summaryText = `Based on your choices, our reflection had ${dominantTrait}. You navigated the conversation using Empathy (${empathyPercent}%) and Logic (${logicPercent}%) as your main guides. It seems like you're in a thoughtful headspace today, balancing your heart and your mind. Thank you for sharing your echoes with me.`;
+                    summaryText = `Through your choices, our story took on ${dominantTrait}. You navigated the narrative using Empathy (${empathyPercent}%) and Logic (${logicPercent}%) as your main guides. Thank you for creating this echo with me.`;
                 }
                 
                 assessmentSummary.textContent = summaryText;
                 assessmentOverlay.style.display = 'flex';
             }
-
+            
             function updateUIState(state) {
                  const stateMap = {
                     LOGIC: { primary: "#D3D3D3", accent: "#4682B4", portrait: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg" },
@@ -270,15 +277,15 @@
 
             function appendMessage(sender, text) {
                  const messageDiv = document.createElement('div');
-                 messageDiv.className = `message ${sender}-message`;
+                 messageDiv.className = `message ${sender-message}`;
                  messageDiv.textContent = text;
                  chatLog.appendChild(messageDiv);
                  chatLog.scrollTop = chatLog.scrollHeight;
             }
 
             // --- Event Listeners ---
-            sendButton.addEventListener('click', () => processInput(userInput.value));
-            userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') processInput(userInput.value); });
+            sendButton.addEventListener('click', () => processInitialInput(userInput.value));
+            userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') processInitialInput(userInput.value); });
             restartButton.addEventListener('click', startSession);
 
             // --- Initial Load ---
