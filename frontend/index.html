@@ -1,0 +1,29 @@
+// The OLD way (insecure)
+async function getAIResponse() {
+    const apiKey = "YOUR_SECRET_API_KEY"; // DANGEROUS: Exposed to the user
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+    const payload = { contents: conversationHistory, systemInstruction: { parts: [{ text: systemPrompt }] }, };
+    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const result = await response.json();
+    return result.candidates[0].content.parts[0].text;
+}
+
+// The NEW, SECURE way
+async function getAIResponse() {
+    // This is the URL of YOUR backend server, not Google's
+    const yourServerUrl = 'http://localhost:3000/interact'; 
+
+    const payload = {
+        history: conversationHistory 
+        // You can also send the current playerModel here if needed
+    };
+
+    const response = await fetch(yourServerUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    return result.aiResponse; // The backend will send back a simple JSON object
+}
