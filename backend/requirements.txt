@@ -1,5 +1,0 @@
-Flask
-requests
-jsonify
-python-dotenv
-Flask-Cors
