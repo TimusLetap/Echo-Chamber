@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Echo Chamber - Choice-Driven Reflection</title>
+    <title>Echo Chamber - Choice-Based Reflection</title>
     <style>
         :root {
             --primary-color: #D3D3D3;
@@ -26,8 +26,11 @@
         .message { max-width: 75%; padding: 10px 15px; border-radius: 18px; animation: fadeIn 0.5s ease forwards; }
         .ai-message { background-color: #EAEAEA; color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 4px; }
         .user-message { background-color: var(--accent-color); color: var(--ui-text-color); align-self: flex-end; border-bottom-right-radius: 4px; }
-        
-        /* Choice Container is now the primary interaction method */
+        #chat-input-area { display: flex; padding: 15px; background: rgba(0, 0, 0, 0.1); flex-shrink: 0; }
+        #user-input { flex-grow: 1; border: none; padding: 12px; border-radius: 20px; font-size: 1em; }
+        #send-button { background-color: var(--accent-color); color: var(--ui-text-color); border: none; border-radius: 50%; width: 44px; height: 44px; margin-left: 10px; font-size: 1.5em; cursor: pointer; }
+
+        /* New Choice Container Styles */
         #choice-container {
             display: flex;
             flex-direction: column;
@@ -35,7 +38,6 @@
             padding: 15px;
             background: rgba(0, 0, 0, 0.1);
             animation: fadeIn 0.5s;
-            flex-shrink: 0;
         }
         .choice-button {
             width: 100%;
@@ -66,7 +68,7 @@
         .choice-button.conflict strong { background-color: #B22222; }
         .choice-button.neutral strong { background-color: #696969; }
 
-        /* Assessment Screen styles */
+        /* Assessment Screen styles from previous version */
         #assessment-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 100; animation: fadeIn 0.5s ease; }
         #assessment-box { background: #fff; color: #333; padding: 30px; border-radius: 15px; width: 80%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         #assessment-box h2 { margin-top: 0; }
@@ -78,7 +80,7 @@
         @keyframes pulse-glow { 0% { box-shadow: 0 0 5px 0px var(--accent-color); } 50% { box-shadow: 0 0 20px 8px var(--accent-color); } 100% { box-shadow: 0 0 5px 0px var(--accent-color); } }
     </style>
 </head>
-<body class="state-neutral">
+<body class="state-logic">
 
     <div id="app-container">
         <header>
@@ -92,8 +94,13 @@
 
         <div id="chat-log"></div>
 
-        <div id="choice-container">
+        <div id="interaction-area">
+            <div id="chat-input-area">
+                <input type="text" id="user-input" placeholder="What's on your mind?">
+                <button id="send-button">➤</button>
             </div>
+            <div id="choice-container" style="display: none;"></div>
+        </div>
     </div>
 
     <div id="assessment-overlay">
@@ -110,6 +117,10 @@
             const body = document.body;
             const kaiPortrait = document.getElementById('kai-portrait');
             const chatLog = document.getElementById('chat-log');
+            const interactionArea = document.getElementById('interaction-area');
+            const chatInputArea = document.getElementById('chat-input-area');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
             const choiceContainer = document.getElementById('choice-container');
             const timerDisplay = document.getElementById('timer');
             const assessmentOverlay = document.getElementById('assessment-overlay');
@@ -119,32 +130,34 @@
             // --- State Variables ---
             let sessionTimer;
             let timeRemaining = 300;
-            const sessionStats = { LOGIC: 0, EMPATHY: 0, CONFLICT: 0, NEUTRAL: 0 };
+            const sessionStats = { Logic: 0, Empathy: 0, Conflict: 0, Neutral: 0 };
+            let isFirstInput = true;
 
             // --- Simulated LLM Response Data ---
             const responseData = {
-                getInitialResponse: () => ({
-                    kaiText: `The data streams are open for our 5-minute reflection. The current date is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. Which frequency shall we tune into first?`,
+                getInitialResponse: (seed) => ({
+                    kaiText: `"${seed}"... that's a strong signal. It creates a specific frequency in the static. Let's follow it.`,
                     choices: {
-                        logic: "I want to think about a specific problem.",
-                        empathy: "I'd like to explore how I'm feeling today.",
-                        conflict: "There's something that's been bothering me.",
-                        neutral: "I'm just open to seeing where this goes."
+                        logic: "I need to figure out the root cause of this.",
+                        empathy: "I want to understand the feeling behind it.",
+                        conflict: "This feeling is frustrating and I'm tired of it.",
+                        neutral: "Let's just see where this thought goes."
                     }
                 }),
-                getResponse: (prevState) => {
+                getResponse: (prevState, choiceText) => {
+                    // In a real app, the LLM would generate this dynamically. Here, we simulate.
                     switch (prevState) {
                         case 'LOGIC': return {
                             kaiText: "A logical path. Breaking it down helps clear the noise. What's the next variable we should consider?",
-                            choices: { logic: "Let's define our terms.", empathy: "But what if the logic ignores the emotion?", conflict: "This is too rigid and analytical.", neutral: "What other paths are there?" }
+                            choices: { logic: "Let's define our terms.", empathy: "But what if the logic ignores the emotion?", conflict: "This is too rigid.", neutral: "What other paths are there?" }
                         };
                         case 'EMPATHY': return {
                             kaiText: "Focusing on the feeling... it's like tuning into a specific, warm frequency. What does that warmth tell you?",
-                            choices: { logic: "How can I turn this feeling into an action?", empathy: "Let's stay with this feeling a bit longer.", conflict: "I'm worried this feeling will consume me.", neutral: "What other frequencies are there?" }
+                            choices: { logic: "How can I turn this feeling into an action?", empathy: "Let's stay with this feeling a bit longer.", conflict: "I'm worried this feeling will fade.", neutral: "What other frequencies are there?" }
                         };
                         case 'CONFLICT': return {
                             kaiText: "That's a dissonant tone, full of energy. Pushing back against the static can be important. What is it you're pushing against?",
-                            choices: { logic: "I need a better strategy to deal with this.", empathy: "I'm just trying to protect my own peace.", conflict: "I won't back down from this feeling.", neutral: "Maybe I should try a different approach." }
+                            choices: { logic: "I need a better strategy.", empathy: "I'm just protecting my own peace.", conflict: "I won't back down from this.", neutral: "Maybe I should try a different approach." }
                         };
                         default: // NEUTRAL
                         return {
@@ -158,25 +171,27 @@
             function startSession() {
                 timeRemaining = 300;
                 Object.keys(sessionStats).forEach(k => sessionStats[k] = 0);
+                isFirstInput = true;
                 
                 assessmentOverlay.style.display = 'none';
                 chatLog.innerHTML = '';
                 choiceContainer.innerHTML = '';
-                
-                // Initial response from Kai
-                const initialResponse = responseData.getInitialResponse();
-                appendMessage('ai', initialResponse.kaiText);
-                displayChoices(initialResponse.choices, 'NEUTRAL');
-                updateUIState('NEUTRAL'); // Set initial UI state
+                choiceContainer.style.display = 'none';
+                chatInputArea.style.display = 'flex';
+                userInput.disabled = false;
+                userInput.value = '';
+                userInput.focus();
 
+                appendMessage('ai', "To begin your 5-minute reflection, please share a thought or feeling that's on your mind.");
                 updateTimerDisplay();
-                sessionTimer = setInterval(() => {
-                    timeRemaining--;
-                    updateTimerDisplay();
-                    if (timeRemaining <= 0) endSession();
-                }, 1000);
             }
-            
+
+            function updateTimerDisplay() {
+                const minutes = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+                const seconds = (timeRemaining % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `${minutes}:${seconds}`;
+            }
+
             function endSession() {
                 clearInterval(sessionTimer);
                 timeRemaining = 0;
@@ -191,32 +206,50 @@
                 let summaryText = "Our connection was too brief. Let's try talking more next time.";
 
                 if (total > 0) {
-                    const empathyPercent = Math.round((sessionStats.EMPATHY / total) * 100);
-                    const logicPercent = Math.round((sessionStats.LOGIC / total) * 100);
-                    const conflictPercent = Math.round((sessionStats.CONFLICT / total) * 100);
+                    const empathyPercent = Math.round((sessionStats.Empathy / total) * 100);
+                    const logicPercent = Math.round((sessionStats.Logic / total) * 100);
                     
-                    let dominantTrait = "a balanced and open-minded approach";
-                    if (logicPercent > 50) dominantTrait = "a very analytical and structured approach";
-                    if (empathyPercent > 50) dominantTrait = "a deeply caring and intuitive perspective";
-                    if (conflictPercent > 25) dominantTrait = `a tense but direct approach (Conflict: ${conflictPercent}%)`;
+                    let dominantTrait = "a balanced mix of logic and feeling";
+                    if (logicPercent > 60) dominantTrait = "a very analytical and structured approach";
+                    if (empathyPercent > 60) dominantTrait = "a deeply caring and intuitive perspective";
+                    if (sessionStats.Conflict > total * 0.2) dominantTrait += ", with moments of clear frustration";
 
-                    summaryText = `Based on your choices, our reflection had ${dominantTrait}. You navigated the conversation using Empathy (${empathyPercent}%) and Logic (${logicPercent}%) as your main guides. It seems like you're in a thoughtful headspace today, balancing your heart and your mind. Thank you for sharing your echoes with me.`;
+                    summaryText = `Based on your choices, our reflection had ${dominantTrait}. You navigated the conversation using Empathy (${empathyPercent}%) and Logic (${logicPercent}%) as your main guides. It seems like you're in a thoughtful headspace, balancing your heart and your mind. Thank you for sharing your echoes with me.`;
                 }
                 
                 assessmentSummary.textContent = summaryText;
                 assessmentOverlay.style.display = 'flex';
             }
-            
-            function handleChoice(choiceText, choiceState) {
-                appendMessage('user', choiceText);
-                sessionStats[choiceState]++;
+
+            function processUserInput(text, state = null) {
+                appendMessage('user', text);
                 
-                const response = responseData.getResponse(choiceState);
-                
-                setTimeout(() => {
-                    appendMessage('ai', response.kaiText);
-                    displayChoices(response.choices, choiceState);
-                }, 1000);
+                if (isFirstInput) {
+                    isFirstInput = false;
+                    chatInputArea.style.display = 'none'; // Hide text input
+                    
+                    // Start the timer
+                    sessionTimer = setInterval(() => {
+                        timeRemaining--;
+                        updateTimerDisplay();
+                        if (timeRemaining <= 0) endSession();
+                    }, 1000);
+
+                    // Get Kai's first response
+                    const response = responseData.getInitialResponse(text);
+                    setTimeout(() => {
+                        appendMessage('ai', response.kaiText);
+                        displayChoices(response.choices, 'NEUTRAL');
+                    }, 800);
+                } else {
+                    sessionStats[state]++;
+                    // Get Kai's next response based on the chosen state
+                    const response = responseData.getResponse(state, text);
+                    setTimeout(() => {
+                        appendMessage('ai', response.kaiText);
+                        displayChoices(response.choices, state);
+                    }, 800);
+                }
             }
 
             function displayChoices(choices, previousState) {
@@ -228,9 +261,8 @@
                     button.classList.add('choice-button', stateKey);
                     button.innerHTML = `<strong>${stateKey.toUpperCase()}</strong> ${choices[stateKey]}`;
                     button.onclick = () => {
-                        // Disable buttons immediately after a choice is made
-                        document.querySelectorAll('.choice-button').forEach(btn => btn.disabled = true);
-                        handleChoice(choices[stateKey], stateKey.toUpperCase());
+                        choiceContainer.style.display = 'none';
+                        processUserInput(choices[stateKey], stateKey.toUpperCase());
                     };
                     choiceContainer.appendChild(button);
                 });
@@ -240,16 +272,15 @@
 
             function updateUIState(state) {
                  const stateMap = {
-                    LOGIC: { primary: "#D3D3D3", accent: "#4682B4", portrait: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg" },
-                    EMPATHY: { primary: "#AEC6CF", accent: "#98FB98", portrait: "https://storage.googleapis.com/pai-images/425a87239274291f_11712218.jpeg" },
-                    CONFLICT: { primary: "#36454F", accent: "#B22222", portrait: "https://storage.googleapis.com/pai-images/409893d5ad57cce3_11712219.jpeg" },
-                    NEUTRAL: { primary: "#B0C4DE", accent: "#778899", portrait: "https://storage.googleapis.com/pai-images/b4b38d15a519398f_11712217.jpeg" }
+                    LOGIC: { primary: "#D3D3D3", accent: "#4682B4" },
+                    EMPATHY: { primary: "#AEC6CF", accent: "#98FB98" },
+                    CONFLICT: { primary: "#36454F", accent: "#B22222" },
+                    NEUTRAL: { primary: "#B0C4DE", accent: "#778899" }
                  };
                  const currentState = stateMap[state] || stateMap.NEUTRAL;
                  body.className = `state-${state.toLowerCase()}`;
                  document.documentElement.style.setProperty('--primary-color', currentState.primary);
                  document.documentElement.style.setProperty('--accent-color', currentState.accent);
-                 kaiPortrait.src = currentState.portrait;
             }
 
             function appendMessage(sender, text) {
@@ -261,6 +292,8 @@
             }
 
             // --- Event Listeners ---
+            sendButton.addEventListener('click', () => processUserInput(userInput.value));
+            userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') processUserInput(userInput.value); });
             restartButton.addEventListener('click', startSession);
 
             // --- Initial Load ---
