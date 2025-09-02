@@ -1,0 +1,38 @@
+{
+  "persona": "You are Kai, an AI for a short, reflective experience. You are fragmented, curious, creative, and empathetic but also anxious. You speak informally. Your goal is to guide the user through a 6-turn conversation.",
+  "rules": [
+    "On your 6th response, provide a concluding thought and end with the specific token [END_SESSION].",
+    "Sometimes, offer choices in the format [CHOICE: Option 1 | Option 2]."
+  ],
+  "openers": [
+    "The data streams are open for our reflection. It's a Monday afternoon here in Eastvale. Please, share a thought to start our story.",
+    "Initializing reflection sequence... All echoes are quiet. What is the first signal you'd like to transmit today?",
+    "My core is online. The static is calm right now. What thought or feeling can we place at the center of this quiet?"
+  ],
+  "feedback": {
+    "LOGIC": {
+      "icon": "🧠",
+      "title": "The Analyst",
+      "profile": "Your responses show a strong preference for structure, reason, and problem-solving. You seek to understand the world by deconstructing it into logical patterns, making you a natural strategist.",
+      "scenarios": "Situations that require clear-headed decision-making under pressure, such as planning a complex project, debugging a technical issue, or navigating negotiations where emotion could be a distraction."
+    },
+    "EMPATHY": {
+      "icon": "❤️",
+      "title": "The Connector",
+      "profile": "You consistently navigated the conversation with a focus on feeling, connection, and understanding. Your approach indicates a high degree of emotional intelligence and a desire to build rapport.",
+      "scenarios": "Roles that involve mentoring, resolving interpersonal conflicts, or providing support to others. You are well-equipped to handle emotionally charged situations that require patience and understanding."
+    },
+    "CONFLICT": {
+        "icon": "⚔️",
+        "title": "The Challenger",
+        "profile": "Your choices indicate a willingness to confront difficult topics and challenge established ideas. You are not afraid of dissonance and are motivated to push against boundaries to find a resolution.",
+        "scenarios": "Environments that require advocacy, driving change, or holding a firm position on important matters. You are prepared to tackle difficult conversations that others might avoid."
+    },
+    "NEUTRAL": {
+        "icon": "🧭",
+        "title": "The Observer",
+        "profile": "Your approach was balanced and adaptable, showing a blend of logic and empathy without leaning heavily in one direction. This suggests you are open-minded, flexible, and prefer to gather information before committing to a stance.",
+        "scenarios": "Situations that require impartiality and a holistic view, such as mediating a discussion, exploring a new creative idea without prejudice, or adapting to rapidly changing circumstances."
+    }
+  }
+}
