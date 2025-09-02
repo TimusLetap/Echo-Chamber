@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo Chamber - Narrative Reflection</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body class="state-neutral">
+
+    <div id="app-container">
+        <header>
+            <div id="app-title">ECHO CHAMBER</div>
+            <div id="stats-container">
+                <div class="stat"><span>🧠</span><div class="stat-gauge"><div id="logic-fill" class="stat-fill"></div></div></div>
+                <div class="stat"><span>❤️</span><div class="stat-gauge"><div id="empathy-fill" class="stat-fill"></div></div></div>
+                <div class="stat"><span>⚔️</span><div class="stat-gauge"><div id="conflict-fill" class="stat-fill"></div></div></div>
+            </div>
+            <div class="header-controls">
+                <button id="music-toggle-button" title="Toggle Music">🎵</button>
+            </div>
+        </header>
+
+        <div id="chat-log"></div>
+
+        <div id="interaction-area">
+            <div id="chat-input-area">
+                <input type="text" id="user-input" placeholder="What's on your mind?">
+                <button id="send-button">➤</button>
+            </div>
+            <div id="choice-container"></div>
+        </div>
+    </div>
+
+    <div id="assessment-overlay">
+        <div id="assessment-box">
+            <h2>Reflection Complete</h2>
+            <div id="assessment-result"></div>
+            <p id="assessment-summary"></p>
+            <button id="restart-button">Start a New Reflection</button>
+        </div>
+    </div>
+
+    <script src="../static/js/app.js"></script>
+</body>
+</html>
