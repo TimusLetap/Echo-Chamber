@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const assessmentSummary = document.getElementById('assessment-summary');
     const restartButton = document.getElementById('restart-button');
     
-    // --- KAI'S PROFILE (Ported from JSON) ---
+    // --- KAI'S PROFILE (Ported from JSON for frontend-only build) ---
     const kaiProfile = {
         feedback: {
             LOGIC: { 
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatLog.innerHTML = '';
         toggleInput(true, true);
         
-        const opener = `The data streams are open for our reflection. It's a Monday afternoon here in Eastvale. Please, share a thought to start our story.`;
+        const opener = `The data streams are open for our reflection. It's Monday evening here in Eastvale. Please, share a thought to start our story.`;
         
         appendMessage('ai', opener);
         conversationHistory.push({ role: "model", parts: [{ text: opener }] });
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             processAIResponse(responseText);
         } catch (error) {
             console.error("API Error:", error);
-            appendMessage('ai', "My thoughts are... scattered. The connection is unstable.");
+            appendMessage('ai', "My thoughts are... scattered. The connection is unstable. Please ensure your API key is correct in the app.js file.");
             toggleInput(true);
         } finally {
             removeTypingIndicator();
@@ -113,15 +113,29 @@ document.addEventListener('DOMContentLoaded', () => {
         // For a real application, this key should be on a backend server.
         // It is exposed here only because we are deploying on GitHub Pages.
         const apiKey = ""; // PASTE YOUR GEMINI API KEY HERE
+        if (!apiKey) {
+            throw new Error("API key is missing.");
+        }
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
         
         const payload = { 
             contents: conversationHistory, 
             systemInstruction: { parts: [{ text: systemPrompt }] }, 
+            // Adding safety settings for a better user experience
+            safetySettings: [
+                { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_ONLY_HIGH" },
+                { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_ONLY_HIGH" },
+                { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_ONLY_HIGH" },
+                { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_ONLY_HIGH" }
+            ]
         };
         const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!response.ok) throw new Error(`API Error: ${response.status} ${response.statusText}`);
         const result = await response.json();
+        
+        if (!result.candidates || result.candidates.length === 0) {
+             throw new Error("Invalid response from AI. The content may have been blocked due to safety settings.");
+        }
         return result.candidates[0].content.parts[0].text;
     }
 
@@ -233,3 +247,4 @@ document.addEventListener('DOMContentLoaded', () => {
     startSession();
 });
 
+const backendUrl = 'https://5001-your-workspace-name.gitpod.io/interact';
