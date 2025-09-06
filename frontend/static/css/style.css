@@ -30,7 +30,7 @@ body, html {
 #app-container { 
     display: flex; 
     flex-direction: column; 
-    height: 100vh; /* Use viewport height to fill the screen */
+    height: 100%; /* Use percentage to respect parent height, better for mobile keyboards */
     width: 100vw; /* Use viewport width */
     max-width: 800px; /* Add a max-width for larger screens */
     margin: 0 auto; /* Center the container on larger screens */
