@@ -28,9 +28,9 @@ body, html {
 }
 
 #app-container { 
-    display: flex; 
-    flex-direction: column; 
-    height: 100%; /* Use percentage to respect parent height, better for mobile keyboards */
+    display: grid; /* Use CSS Grid for a robust layout */
+    grid-template-rows: auto 1fr auto; /* Header (auto), Chat (fills space), Footer (auto) */
+    height: 100vh; /* Use viewport height to fill the entire screen */
     width: 100vw; /* Use viewport width */
     max-width: 800px; /* Add a max-width for larger screens */
     margin: 0 auto; /* Center the container on larger screens */
@@ -56,7 +56,7 @@ body, html {
 .state-logic .kai-mask { box-shadow: 0 0 10px var(--accent-color); }
 
 /* Header */
-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0, 0, 0, 0.2); flex-shrink: 0; z-index: 10; border-bottom: 1px solid var(--border-color); }
+header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0, 0, 0, 0.2); z-index: 10; border-bottom: 1px solid var(--border-color); }
 #app-title { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: bold; color: var(--ui-text-color); text-shadow: 0 0 8px var(--accent-color); transition: all 0.8s ease; }
 #stats-container { display: flex; gap: 1rem; }
 .stat { display: flex; flex-direction: row; align-items: center; }
@@ -75,7 +75,7 @@ header { display: flex; justify-content: space-between; align-items: center; pad
 #music-toggle-button.playing { opacity: 1; }
 
 /* Chat Area */
-#chat-log { flex-grow: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+#chat-log { overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
 .message { max-width: 85%; padding: 0.6rem 1rem; border-radius: 18px; animation: fadeIn 0.5s ease forwards; line-height: 1.6; font-size: 0.95rem; }
 
 .ai-message { background-color: var(--ai-bubble-bg); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 4px; display: flex; align-items: center; transition: background-color 0.8s ease, color 0.8s ease; }
@@ -89,7 +89,7 @@ header { display: flex; justify-content: space-between; align-items: center; pad
 .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
 
 /* Interaction Area */
-#interaction-area { flex-shrink: 0; }
+#interaction-area { /* No flex-shrink needed */ }
 #chat-input-area { display: flex; padding: 1rem; background: rgba(0, 0, 0, 0.2); border-top: 1px solid var(--border-color); }
 #user-input { flex-grow: 1; border: 1px solid var(--border-color); background-color: var(--primary-color); color: var(--text-color); padding: 0.75rem; border-radius: 20px; font-size: 1rem; transition: all 0.3s ease; }
 #user-input:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 8px var(--accent-color); }
