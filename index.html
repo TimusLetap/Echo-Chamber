@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Echo Chamber - Narrative Reflection</title>
-    <!-- We will create this stylesheet in the next step -->
+    <!-- This links to the CSS file that provides all the visual styling -->
     <link rel="stylesheet" href="static/css/style.css">
 </head>
 <body class="state-neutral">
 
+    <!-- This is the main container for the entire application -->
     <div id="app-container">
+        
+        <!-- The header contains the title and the dynamic stat gauges -->
         <header>
             <div id="app-title">ECHO CHAMBER</div>
             <div id="stats-container">
@@ -22,8 +25,10 @@
             </div>
         </header>
 
+        <!-- The chat messages will be dynamically added here by the JavaScript -->
         <div id="chat-log"></div>
 
+        <!-- This area contains the user's input field and the choice buttons -->
         <div id="interaction-area">
             <div id="chat-input-area">
                 <input type="text" id="user-input" placeholder="What's on your mind?">
@@ -33,6 +38,7 @@
         </div>
     </div>
 
+    <!-- This is the hidden overlay for the final assessment screen -->
     <div id="assessment-overlay">
         <div id="assessment-box">
             <h2>Reflection Complete</h2>
@@ -42,7 +48,7 @@
         </div>
     </div>
 
-    <!-- We will create this JavaScript file in a later step -->
+    <!-- This links to the JavaScript file that contains all the application's logic -->
     <script src="static/js/app.js"></script>
 </body>
 </html>
