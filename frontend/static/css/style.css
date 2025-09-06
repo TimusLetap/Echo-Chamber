@@ -17,8 +17,31 @@
 }
 
 /* Base styles */
-body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; overflow: hidden; background-color: #000; }
-#app-container { display: flex; flex-direction: column; height: 100vh; background-color: var(--primary-color); color: var(--text-color); transition: background-color 0.8s ease, border-color 0.8s ease, box-shadow 0.8s ease; border: 1px solid var(--border-color); box-shadow: var(--container-box-shadow); box-sizing: border-box; backdrop-filter: blur(10px); }
+body, html { 
+    margin: 0; 
+    padding: 0; 
+    height: 100%; 
+    font-family: 'Inter', sans-serif; 
+    overflow: hidden; 
+    background-color: #000; 
+    font-size: 16px; /* Set a base font size for rem units */
+}
+
+#app-container { 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh; /* Use viewport height to fill the screen */
+    width: 100vw; /* Use viewport width */
+    max-width: 800px; /* Add a max-width for larger screens */
+    margin: 0 auto; /* Center the container on larger screens */
+    background-color: var(--primary-color); 
+    color: var(--text-color); 
+    transition: background-color 0.8s ease, border-color 0.8s ease, box-shadow 0.8s ease; 
+    border: 1px solid var(--border-color); 
+    box-shadow: var(--container-box-shadow); 
+    box-sizing: border-box; 
+    backdrop-filter: blur(10px); 
+}
 
 /* --- State-specific Theme Overrides --- */
 .state-empathy { --accent-color: #98FB98; --secondary-accent: #F5F5DC; --text-color: #2a3439; --ai-bubble-bg: #c1d3d9; --user-bubble-bg: #d0e0e6; --border-color: #9ab0b8; }
@@ -29,38 +52,36 @@ body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-ser
 .state-conflict #app-container { animation: pulse-glow 2.5s infinite; }
 .state-conflict .kai-mask { box-shadow: 0 0 15px var(--accent-color); }
 
-
 .state-logic { --primary-color: #D3D3D3; --accent-color: #4682B4; --secondary-accent: #2563eb; --text-color: #1c1c1c; --ai-bubble-bg: #e0e0e0; --user-bubble-bg: #f0f0f0; --border-color: #b0b0b0; }
 .state-logic .kai-mask { box-shadow: 0 0 10px var(--accent-color); }
 
-
 /* Header */
-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: rgba(0, 0, 0, 0.2); flex-shrink: 0; z-index: 10; border-bottom: 1px solid var(--border-color); }
-#app-title { font-family: 'Orbitron', sans-serif; font-size: 1.2em; font-weight: bold; color: var(--ui-text-color); text-shadow: 0 0 8px var(--accent-color); transition: all 0.8s ease; }
-#stats-container { display: flex; gap: 20px; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0, 0, 0, 0.2); flex-shrink: 0; z-index: 10; border-bottom: 1px solid var(--border-color); }
+#app-title { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: bold; color: var(--ui-text-color); text-shadow: 0 0 8px var(--accent-color); transition: all 0.8s ease; }
+#stats-container { display: flex; gap: 1rem; }
 .stat { display: flex; flex-direction: row; align-items: center; }
-.stat span { font-size: 1.4em; margin-right: 8px; }
-.stat-gauge { width: 80px; height: 8px; background-color: rgba(0, 0, 0, 0.3); border-radius: 4px; overflow: hidden; }
-.stat-fill { height: 100%; width: 33.3%; border-radius: 4px; transition: width 0.5s ease-out, background-color 0.8s ease; }
+.stat span { font-size: 1.25rem; margin-right: 0.5rem; }
+.stat-gauge { width: 50px; height: 6px; background-color: rgba(0, 0, 0, 0.3); border-radius: 3px; overflow: hidden; }
+.stat-fill { height: 100%; width: 33.3%; border-radius: 3px; transition: width 0.5s ease-out, background-color 0.8s ease; }
 #logic-fill, .state-logic .stat-fill { background-color: #4682B4; }
 #empathy-fill, .state-empathy .stat-fill { background-color: #98FB98; }
 #conflict-fill, .state-conflict .stat-fill { background-color: #B22222; }
 .flash { animation: flash 0.5s ease; }
 
 .header-controls { display: flex; align-items: center; }
-#music-toggle-button { background: none; border: none; color: var(--ui-text-color); font-size: 1.5rem; cursor: pointer; transition: transform 0.2s, opacity 0.3s, color 0.8s ease; }
+#music-toggle-button { background: none; border: none; color: var(--ui-text-color); font-size: 1.5rem; cursor: pointer; transition: transform 0.2s, opacity 0.3s, color 0.8s ease; padding: 0; }
 #music-toggle-button:hover { transform: scale(1.1); color: var(--accent-color); }
 #music-toggle-button { opacity: 0.5; }
 #music-toggle-button.playing { opacity: 1; }
 
 /* Chat Area */
-#chat-log { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-.message { max-width: 85%; padding: 10px 15px; border-radius: 18px; animation: fadeIn 0.5s ease forwards; line-height: 1.6; }
+#chat-log { flex-grow: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.message { max-width: 85%; padding: 0.6rem 1rem; border-radius: 18px; animation: fadeIn 0.5s ease forwards; line-height: 1.6; font-size: 0.95rem; }
 
 .ai-message { background-color: var(--ai-bubble-bg); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 4px; display: flex; align-items: center; transition: background-color 0.8s ease, color 0.8s ease; }
 .user-message { background-color: var(--user-bubble-bg); color: var(--text-color); align-self: flex-end; border-bottom-right-radius: 4px; transition: background-color 0.8s ease, color 0.8s ease; }
 
-.kai-mask { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; margin-right: 12px; background-color: var(--accent-color); transition: background-color 0.8s ease, box-shadow 0.8s ease; box-shadow: 0 0 12px var(--accent-color), inset 0 0 5px rgba(255,255,255,0.5); opacity: var(--mask-glow-opacity); }
+.kai-mask { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; margin-right: 0.75rem; background-color: var(--accent-color); transition: background-color 0.8s ease, box-shadow 0.8s ease; box-shadow: 0 0 12px var(--accent-color), inset 0 0 5px rgba(255,255,255,0.5); opacity: var(--mask-glow-opacity); }
 
 .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 10px 15px !important; }
 .typing-indicator span { width: 8px; height: 8px; background-color: var(--accent-color); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
@@ -69,23 +90,58 @@ header { display: flex; justify-content: space-between; align-items: center; pad
 
 /* Interaction Area */
 #interaction-area { flex-shrink: 0; }
-#chat-input-area { display: flex; padding: 15px; background: rgba(0, 0, 0, 0.2); border-top: 1px solid var(--border-color); }
-#user-input { flex-grow: 1; border: 1px solid var(--border-color); background-color: var(--primary-color); color: var(--text-color); padding: 12px; border-radius: 20px; font-size: 1em; transition: all 0.3s ease; }
+#chat-input-area { display: flex; padding: 1rem; background: rgba(0, 0, 0, 0.2); border-top: 1px solid var(--border-color); }
+#user-input { flex-grow: 1; border: 1px solid var(--border-color); background-color: var(--primary-color); color: var(--text-color); padding: 0.75rem; border-radius: 20px; font-size: 1rem; transition: all 0.3s ease; }
 #user-input:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 8px var(--accent-color); }
-#send-button { background-image: linear-gradient(45deg, var(--accent-color), var(--secondary-accent)); color: var(--ui-text-color); border: none; border-radius: 50%; width: 44px; height: 44px; margin-left: 10px; font-size: 1.5em; cursor: pointer; transition: all 0.8s ease; }
+#send-button { background-image: linear-gradient(45deg, var(--accent-color), var(--secondary-accent)); color: var(--ui-text-color); border: none; border-radius: 50%; width: 44px; height: 44px; margin-left: 0.5rem; font-size: 1.5rem; cursor: pointer; transition: all 0.8s ease; flex-shrink: 0; }
 
-#choice-container { display: none; flex-direction: column; gap: 10px; padding: 15px; background: rgba(0, 0, 0, 0.2); animation: fadeIn 0.5s; border-top: 1px solid var(--border-color); }
-.choice-button { width: 100%; padding: 15px; font-size: 1em; text-align: left; border: 1px solid var(--border-color); border-radius: 10px; background-color: var(--ai-bubble-bg); color: var(--text-color); cursor: pointer; transition: background-color 0.2s, transform 0.2s, color 0.8s ease; }
+#choice-container { display: none; flex-direction: column; gap: 0.5rem; padding: 1rem; background: rgba(0, 0, 0, 0.2); animation: fadeIn 0.5s; border-top: 1px solid var(--border-color); }
+.choice-button { width: 100%; padding: 1rem; font-size: 1rem; text-align: left; border: 1px solid var(--border-color); border-radius: 10px; background-color: var(--ai-bubble-bg); color: var(--text-color); cursor: pointer; transition: background-color 0.2s, transform 0.2s, color 0.8s ease; box-sizing: border-box; }
 .choice-button:hover { background-color: var(--user-bubble-bg); transform: scale(1.02); }
 
 /* Assessment Screen */
-#assessment-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 100; animation: fadeIn 0.5s ease; }
-#assessment-box { background: #fff; color: #333; padding: 30px; border-radius: 15px; width: 80%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-#assessment-box h2 { margin-top: 0; font-size: 1.8em; }
-#assessment-result { font-size: 1.5em; font-weight: bold; margin: 15px 0; }
-#assessment-summary { margin: 20px 0; font-size: 1em; line-height: 1.6; text-align: left; }
-#restart-button { background-image: linear-gradient(45deg, var(--accent-color), var(--secondary-accent)); color: white; border: none; padding: 12px 25px; font-size: 1em; border-radius: 20px; cursor: pointer; transition: filter 0.3s; }
+#assessment-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 100; animation: fadeIn 0.5s ease; padding: 1rem; box-sizing: border-box; }
+#assessment-box { background: #fff; color: #333; padding: 1.5rem; border-radius: 15px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+#assessment-box h2 { margin-top: 0; font-size: 1.5rem; }
+#assessment-result { font-size: 1.2rem; font-weight: bold; margin: 1rem 0; }
+#assessment-summary { margin: 1rem 0; font-size: 1rem; line-height: 1.6; text-align: left; }
+#restart-button { background-image: linear-gradient(45deg, var(--accent-color), var(--secondary-accent)); color: white; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; border-radius: 20px; cursor: pointer; transition: filter 0.3s; }
 #restart-button:hover { filter: brightness(1.1); }
+
+/* --- Media Query for Mobile Devices --- */
+@media (max-width: 600px) {
+    #app-container {
+        border-radius: 0;
+        border: none;
+        height: 100%; /* Ensure it fills mobile screen */
+    }
+    header {
+        padding: 0.5rem 0.75rem;
+    }
+    #app-title {
+        font-size: 1rem;
+    }
+    .stat span {
+        font-size: 1.1rem;
+        margin-right: 0.25rem;
+    }
+    .stat-gauge {
+        width: 35px;
+    }
+    #stats-container {
+        gap: 0.75rem;
+    }
+    #chat-log {
+        padding: 0.75rem;
+    }
+    .message {
+        font-size: 0.9rem;
+    }
+    #user-input, .choice-button {
+        font-size: 0.95rem;
+    }
+}
+
 
 /* Animations */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
